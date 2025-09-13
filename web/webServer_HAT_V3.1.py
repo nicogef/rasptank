@@ -30,11 +30,13 @@ speed_set = 100
 rad = 0.5
 turnWiggle = 60
 
-ARM = RPIservo.ServoCtrlThread(0, 90, 1)
-HAND = RPIservo.ServoCtrlThread(1, 90, -1)
-WRIST = RPIservo.ServoCtrlThread(2, 90, 1)
-CAMERA = RPIservo.ServoCtrlThread(4, 90, -1)
-CLAW = RPIservo.ServoCtrlThread(5, 90, 1)
+controler = RPIservo.ServoCtrl()
+controler.start()
+ARM = RPIservo.ServoCtrlThread(controler, 0, 90, 1)
+HAND = RPIservo.ServoCtrlThread(controler, 1, 90, -1)
+WRIST = RPIservo.ServoCtrlThread(controler, 2, 90, 1)
+CAMERA = RPIservo.ServoCtrlThread(controler, 4, 90, -1)
+CLAW = RPIservo.ServoCtrlThread(controler, 5, 90, 1)
 
 SERVOS = [ARM, HAND, WRIST, CLAW, CAMERA]
 

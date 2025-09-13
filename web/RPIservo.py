@@ -10,9 +10,6 @@ from adafruit_motor import servo
 from adafruit_pca9685 import PCA9685
 import threading
 
-
-
-
 # When the motor occupies pins 9-15 on the PCA9685, 
 # the servo can only use pins 0-8.
 i2c = busio.I2C(SCL, SDA)
@@ -35,38 +32,185 @@ servo_num = 8
 i2c = None
 pwm_servo = None
 
-class ServoCtrlThread():
-    def __init__(self, ID, initPos, direction):
+class ServoCtrlThread(threading.Thread):
+    def __init__(self, controler, ID, initPos, direction):
         self.__id = ID
-        self.initPos = initPos
-        self.nowPos = initPos
         self.sc_direction = direction
-        self.ctrl = ServoCtrl()
-        self.ctrl.start()
-        
-    def initialize(self):
-        self.ctrl.initConfig(self.__id, self.initPos, 1)
-    
-    ########## SERVO Action
+        self.initPos = initPos
+        self.ingGoal = initPos
+        self.maxPos = 180
+        self.minPos = 0
+        self.scSpeed = 0
+        self.ctrl = controler
+        self.ctrlRangeMax = 180
+        self.ctrlRangeMin = 0
+        self.angleRange = 180
+        self.scMode = 'auto'
+        self.scTime = 2.0
+        self.scSteps = 30
+        self.scDelay = 0.09
+        self.scMoveTime = 0.09
+        self.goalUpdate = 0
+        self.wiggleDirection = 1
+        self.setPWM(initPos)
+
+        super().__init__()
+        self.__flag = threading.Event()
+        self.__flag.clear()
+        self.start()
+
+    ##################################
+    ########## SERVO Action ##########
+    ##################################            
     def clockwise(self):
-        self.ctrl.singleServo(self.__id, self.sc_direction, 1)
+        self.__move(self.sc_direction, 1)
         
     def anticlockwise(self):
-        self.ctrl.singleServo(self.__id, -self.sc_direction, 1)
+        self.__move(-self.sc_direction, 1)
         
     def stopWiggle(self):
-        self.ctrl.stopWiggle()
+        self.pause()
+        self.goalUpdate = 1
+        self.lastPos = self.nowPos
+        self.goalUpdate = 0
         
-    ########## SERVO PWM
+    def __move(self, direcInput, speedSet):
+        self.wiggleDirection = direcInput
+        self.scSpeed = speedSet
+        self.scMode = 'wiggle'
+        self.goalUpdate = 1
+        self.lastPos = self.nowPos
+        self.goalUpdate = 0
+        self.resume()
+        
+    def set_angle(self, angle):
+        self.ctrl.set_angle(self.__id, angle)
+        
+    def scMove(self):
+        if self.scMode == 'init':
+            self.reset()
+        elif self.scMode == 'auto':
+            self.moveAuto()
+        elif self.scMode == 'certain':
+            self.moveCert()
+        elif self.scMode == 'wiggle':
+            self.moveWiggle()
+        
+    def moveAuto(self):
+        self.ingGoal = self.goalPos
+
+        for step in range(1, self.scSteps + 1):
+            if not self.goalUpdate:
+                self.nowPos = int(round((self.lastPos + (((self.goalPos - self.lastPos)/self.scSteps)*step)),0))
+                self.set_angle(self.nowPos)
+
+                if self.ingGoal != self.goalPos:
+                    self.goalUpdate = 1
+                    self.lastPos = self.nowPos
+                    self.goalUpdate = 0
+                    time.sleep(self.scTime/self.scSteps)
+                    return 1
+            time.sleep((self.scTime/self.scSteps - self.scMoveTime))
+
+        self.goalUpdate = 1
+        self.lastPos = self.nowPos
+        self.goalUpdate = 0
+        self.pause()
+        return 0
+
+    def moveCert(self):
+        self.ingGoal = self.goalPos
+        self.bufferPos = self.lastPos
+
+        while self.nowPos != self.goalPos:
+            if self.lastPos < self.goalPos:
+                self.bufferPos += self.pwmGenOut(self.scSpeed)/(1/self.scDelay)
+                self.nowPos = int(round(self.bufferPos, 0))
+                if self.nowPos > self.goalPos: 
+                    self.nowPos = self.goalPos
+                    
+            elif self.lastPos > self.goalPos:
+                self.bufferPos -= self.pwmGenOut(self.scSpeed)/(1/self.scDelay)
+                self.nowPos = int(round(self.bufferPos, 0))
+                if self.nowPos < self.goalPos:
+                    self.nowPos = self.goalPos
+
+            if not self.goalUpdate:
+                self.set_angle(i, self.nowPos)
+
+            if self.ingGoal != self.goalPos:
+                self.goalUpdate = 1
+                self.lastPos = self.nowPos
+                self.goalUpdate = 0
+                return 1
+            
+            self.goalUpdate = 1
+            self.lastPos = self.nowPos
+            self.goalUpdate = 0
+            time.sleep(self.scDelay-self.scMoveTime)
+
+        else:
+            self.pause()
+            return 0   
+
+    def moveWiggle(self):
+        self.bufferPos += self.wiggleDirection*self.pwmGenOut(self.scSpeed)/(1/self.scDelay)
+        newNow = int(round(self.bufferPos, 0))
+        if self.bufferPos > self.maxPos:
+            self.bufferPos = self.maxPos
+        elif self.bufferPos < self.minPos:
+            self.bufferPos = self.minPos
+        self.nowPos = newNow
+        self.lastPos = newNow
+        if self.bufferPos < self.maxPos and self.bufferPos > self.minPos:
+            self.set_angle(self.nowPos)
+        else:
+            self.stopWiggle()
+        time.sleep(self.scDelay-self.scMoveTime)
+
+    def pwmGenOut(self, angleInput):
+        return int(round(((self.ctrlRangeMax-self.ctrlRangeMin)/self.angleRange*angleInput),0))
+        
+    ##################################
+    ########## SERVO PWM    ##########
+    ##################################
     def incrementPwm(self):
         self.setPWM(self.nowPos + 1)
         
     def derementPwm(self):
         self.setPWM(self.nowPos - 1)
+
+    def setInitialPwm(self, initInput):
+        self.initPos = pwm
+        self.setPWM(initInput)
+        self.pause()
         
-    def setPWM(self, pwm):
-        self.nowPos = pwm
-        self.ctrl.setPWM(self.__id, pwm)
+    def setPWM(self, PWM_input):
+        if PWM_input > self.minPos and PWM_input < self.maxPos:
+            self.set_angle(PWM_input)
+            self.lastPos = PWM_input
+            self.nowPos = PWM_input
+            self.bufferPos = float(PWM_input)
+            self.goalPos = PWM_input
+        else:
+            print('initPos Value Error.')
+   
+    ##################################
+    ####### Thread Management ########
+    ##################################
+    def run(self):
+        while 1:
+            self.__flag.wait()
+            self.scMove()
+            pass
+            
+    def pause(self):
+        print(f'-> pause {self.__id}')
+        self.__flag.clear()
+
+    def resume(self):
+        print(f'-> resume {self.__id}')
+        self.__flag.set()
         
 
 class ServoCtrl(threading.Thread):
@@ -76,7 +220,7 @@ class ServoCtrl(threading.Thread):
         self.i2c = busio.I2C(SCL, SDA)
         # Create a simple PCA9685 class instance.
         self.pwm_servo = PCA9685(self.i2c, address=0x5f) #default 0x40
-
+        
         self.pwm_servo.frequency = 50
 
         
@@ -277,7 +421,7 @@ class ServoCtrl(threading.Thread):
             self.set_angle(self.wiggleID, self.nowPos[self.wiggleID])
         else:
             self.stopWiggle()
-        time.sleep(self.scDelay-self.scMoveTime)
+        time.sleep(self.scDelay - self.scMoveTime)
 
 
     def stopWiggle(self):
@@ -323,8 +467,7 @@ class ServoCtrl(threading.Thread):
         self.goalPos[ID] = PWM_input
         self.set_angle(ID, PWM_input)
         self.pause()
-
-
+        
     def run(self):
         while 1:
             self.__flag.wait()
