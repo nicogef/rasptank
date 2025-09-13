@@ -17,24 +17,15 @@ i2c = busio.I2C(SCL, SDA)
 pwm_servo = PCA9685(i2c, address=0x5f) #default 0x40
 pwm_servo.frequency = 50
 
-
-init_pwm0 = 90
-init_pwm1 = 90
-init_pwm2 = 90
-init_pwm3 = 90
-
-init_pwm4 = 90
-init_pwm5 = 90
-init_pwm6 = 90
-init_pwm7 = 90
-
 servo_num = 8
 i2c = None
 pwm_servo = None
 
 class ServoCtrlThread(threading.Thread):
-    def __init__(self, controler, ID, initPos, direction):
-        self.__id = ID
+    
+    def __init__(self, name, controler, channel_number, initPos, direction):
+        self.__name = name
+        self.__channel = controler.pwm_servo.channels[channel_number]
         self.sc_direction = direction
         self.initPos = initPos
         self.ingGoal = initPos
@@ -84,7 +75,9 @@ class ServoCtrlThread(threading.Thread):
         self.resume()
         
     def set_angle(self, angle):
-        self.ctrl.set_angle(self.__id, angle)
+        servo_angle = servo.Servo(self.__channel, min_pulse=500, max_pulse=2400,actuation_range=180)
+        servo_angle.angle = angle
+        #self.ctrl.set_angle(self.__id, angle)
         
     def scMove(self):
         if self.scMode == 'init':
@@ -180,9 +173,8 @@ class ServoCtrlThread(threading.Thread):
     def derementPwm(self):
         self.setPWM(self.nowPos - 1)
 
-    def setInitialPwm(self, initInput):
-        self.initPos = pwm
-        self.setPWM(initInput)
+    def reset(self):
+        self.setPWM(self.initPos)
         self.pause()
         
     def setPWM(self, PWM_input):
@@ -205,11 +197,11 @@ class ServoCtrlThread(threading.Thread):
             pass
             
     def pause(self):
-        print(f'-> pause {self.__id}')
+        print(f'-> pause {self.__name}')
         self.__flag.clear()
 
     def resume(self):
-        print(f'-> resume {self.__id}')
+        print(f'-> resume {self.__name}')
         self.__flag.set()
         
 
@@ -227,8 +219,7 @@ class ServoCtrl(threading.Thread):
         self.sc_direction = [1,1,1,1, 1,1,1,1]
         # # If motors are not used, 16 servos need to be controlled at the same time.
         # self.sc_direction = [1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1] 
-        self.initPos = [init_pwm0,init_pwm1,init_pwm2,init_pwm3,
-                        init_pwm4,init_pwm5,init_pwm6,init_pwm7]
+        self.initPos = [90,90,90,90, 90,90,90,90]
         self.goalPos = [90,90,90,90, 90,90,90,90]
         self.nowPos  = [90,90,90,90, 90,90,90,90]
         self.bufferPos  = [90.0,90.0,90.0,90.0, 90.0,90.0,90.0,90.0]

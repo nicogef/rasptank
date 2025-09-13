@@ -31,16 +31,21 @@ rad = 0.5
 turnWiggle = 60
 
 controler = RPIservo.ServoCtrl()
-controler.start()
-ARM = RPIservo.ServoCtrlThread(controler, 0, 90, 1)
-HAND = RPIservo.ServoCtrlThread(controler, 1, 90, -1)
-WRIST = RPIservo.ServoCtrlThread(controler, 2, 90, 1)
-CAMERA = RPIservo.ServoCtrlThread(controler, 4, 90, -1)
-CLAW = RPIservo.ServoCtrlThread(controler, 5, 90, 1)
+#controler.start()
+
+ARM = RPIservo.ServoCtrlThread("ARM", controler, 0, 90, 1)
+HAND = RPIservo.ServoCtrlThread("HAND", controler, 1, 90, -1)
+WRIST = RPIservo.ServoCtrlThread("WRIST", controler, 2, 90, 1)
+# 3 is detroyed using 5 instead
+CLAW = RPIservo.ServoCtrlThread("CLAW", controler, 5, 90, 1)
+CAMERA = RPIservo.ServoCtrlThread("CAMERA", controler, 4, 90, -1)
 
 SERVOS = [ARM, HAND, WRIST, CLAW, CAMERA]
 
+MOVEMENT=move.MovementCtrlThread(-1, -1)
+
 controls = {
+  # Servos
   'armUp'    : ARM.clockwise,
   'armDown'  : ARM.anticlockwise,
   'armStop'  : ARM.stopWiggle,
@@ -55,7 +60,15 @@ controls = {
   'GLstop'   : CLAW.stopWiggle,
   'up'       : CAMERA.clockwise,
   'down'     : CAMERA.anticlockwise,
-  'UDstop'   : CAMERA.stopWiggle
+  'UDstop'   : CAMERA.stopWiggle,
+  'home'     : lambda: servoPosInit(),
+  # Motors
+  'forward'  : MOVEMENT.forward,
+  'backward' : MOVEMENT.backward,
+  'left'     : MOVEMENT.left,
+  'right'    : MOVEMENT.right,
+  'DS'       : MOVEMENT.stop,
+  'TS'       : MOVEMENT.stop
 }
 
 # modeSelect = 'none'
@@ -72,12 +85,11 @@ direction_command = 'no'
 turn_command = 'no'
 
 def servoPosInit():
-    ARM.initialize()
-    HAND.initialize()
-    WRIST.initialize()
-    # 3 is detroyed
-    CAMERA.initialize()
-    CLAW.initialize()
+    ARM.reset()
+    HAND.reset()
+    WRIST.reset()
+    CAMERA.reset()
+    CLAW.reset()
 
 
 # def replace_num(initial,new_num):   #Call this function to replace data in '.txt' file
@@ -181,46 +193,6 @@ def switchCtrl(command_input, response):
     elif 'Switch_3_off' in command_input:
         switch.switch(3,0) 
 
-
-def robotCtrl(command_input, response):
-    global direction_command, turn_command
-    if 'forward' == command_input:
-        direction_command = 'forward'
-        move.move(speed_set, 1, "mid")
-        print("1111")
-    
-    elif 'backward' == command_input:
-        direction_command = 'backward'
-        move.move(speed_set, -1, "no")
-
-    elif 'DS' in command_input:
-        direction_command = 'no'
-        if turn_command == 'no':
-            move.motorStop()
-
-    elif 'left' == command_input:
-        turn_command = 'left'
-        move.move(speed_set, 1, "left")
-
-    elif 'right' == command_input:
-        turn_command = 'right'
-        move.move(speed_set, 1, "right")
-
-    elif 'TS' in command_input:
-        turn_command = 'no'
-        if direction_command == 'no':
-            move.motorStop()
-    elif command_input in controls:
-        controls[command_input]()
-
-    elif 'home' == command_input:
-        ARM.initialize()
-        HAND.initialize()
-        WRIST.initialize()
-        CLAW.initialize()
-        CAMERA.initialize()
-
-
 def configPWM(command_input, response):
     
     if 'SiLeft' in command_input:
@@ -240,11 +212,7 @@ def configPWM(command_input, response):
         servoPosInit()
 
     elif 'PWMD' == command_input:
-        ARM.initialize()
-        HAND.initialize()
-        WRIST.initialize()
-        CLAW.initialize()
-        CAMERA.initialize()
+        servoPosInit()
 
 def update_code():
     # Update local to be consistent with remote
@@ -308,7 +276,8 @@ async def recv_msg(websocket):
             continue
 
         if isinstance(data,str):
-            robotCtrl(data, response)
+            if data in controls:
+                controls[data]()
 
             switchCtrl(data, response)
 
@@ -322,8 +291,7 @@ async def recv_msg(websocket):
 
             if 'wsB' in data:
                 try:
-                    set_B=data.split()
-                    speed_set = int(set_B[1])
+                    MOVEMENT.setSpeed(int(data.split()[1]))
                 except:
                     pass
 
