@@ -25,7 +25,6 @@ import app
 
 OLED_connection = 0
 
-
 functionMode = 0
 speed_set = 100
 rad = 0.5
@@ -35,21 +34,11 @@ scGear = RPIservo.ServoCtrl()
 # scGear.setup()
 scGear.moveInit()
 
-P_sc = RPIservo.ServoCtrl()
-P_sc.start()
-
-T_sc = RPIservo.ServoCtrl()
-T_sc.start()
-
-H1_sc = RPIservo.ServoCtrl()
-H1_sc.start()
-
-H2_sc = RPIservo.ServoCtrl()
-H2_sc.start()
-
-G_sc = RPIservo.ServoCtrl()
-G_sc.start()
-
+ARM = RPIservo.SingleServoCtrl(0, 90, 1)
+HAND = RPIservo.SingleServoCtrl(1, 90, -1)
+WRIST = RPIservo.SingleServoCtrl(2, 90, 1)
+CAMERA = RPIservo.SingleServoCtrl(4, 90, -1)
+CLAW = RPIservo.SingleServoCtrl(5, 90, 1)
 
 # modeSelect = 'none'
 modeSelect = 'PT'
@@ -57,7 +46,7 @@ modeSelect = 'PT'
 init_pwm0 = scGear.initPos[0]
 init_pwm1 = scGear.initPos[1]
 init_pwm2 = scGear.initPos[2]
-init_pwm3 = scGear.initPos[3]
+init_pwm3 = scGear.initPos[5]
 init_pwm4 = scGear.initPos[4]
 
 fuc = functions.Functions()
@@ -71,13 +60,12 @@ direction_command = 'no'
 turn_command = 'no'
 
 def servoPosInit():
-
-    scGear.initConfig(0,init_pwm0,1)
-    P_sc.initConfig(1,init_pwm1,1)
-    T_sc.initConfig(2,init_pwm2,1)
-    H1_sc.initConfig(3,init_pwm3,1)
-    H2_sc.initConfig(3,init_pwm3,1)
-    G_sc.initConfig(4,init_pwm4,1)
+    ARM.initialize()
+    HAND.initialize()
+    WRIST.initialize()
+    # 3 is detroyed
+    CAMERA.initialize()
+    CLAW.initialize()
 
 
 def replace_num(initial,new_num):   #Call this function to replace data in '.txt' file
@@ -154,12 +142,11 @@ def functionSelect(command_input, response):
         move.motorStop()
 
     elif 'steadyCamera' == command_input:
-        fuc.steady(T_sc.lastPos[2])
+        fuc.steady(CAMERA.lastPos[2])
 
     elif 'steadyCameraOff' == command_input:
         fuc.pause()
         move.motorStop()
-
 
 
 
@@ -214,48 +201,48 @@ def robotCtrl(command_input, response):
             move.motorStop()
 
     elif 'armUp' == command_input: #servo A
-        H1_sc.singleServo(0, 1, 2)
+        ARM.clockwise()
     elif 'armDown' == command_input:
-        H1_sc.singleServo(0,-1, 2)
+        ARM.anticlockwise()
     elif 'armStop' in command_input:
-        H1_sc.stopWiggle()
+        ARM.stopWiggle()
 
     elif 'handUp' == command_input: # servo B
-        H2_sc.singleServo(1, -1, 2)
+        HAND.clockwise()
     elif 'handDown' == command_input:
-        H2_sc.singleServo(1,1, 2)
+        HAND.anticlockwise()
     elif 'handStop' in command_input:
-        H2_sc.stopWiggle()
+        HAND.stopWiggle()
 
     elif 'lookleft' == command_input: # servo C
-        P_sc.singleServo(2, 1, 2)
+        WRIST.clockwise()
     elif 'lookright' == command_input:
-        P_sc.singleServo(2,-1, 2)
+        WRIST.anticlockwise()
     elif 'LRstop' in command_input:
-        P_sc.stopWiggle()
+        WRIST.stopWiggle()
 
     elif 'grab' == command_input: # servo D
-        G_sc.singleServo(3, 1, 2)
+        CLAW.clockwise()
     elif 'loose' == command_input:
-        G_sc.singleServo(3,-1, 2)
+        CLAW.anticlockwise()
     elif 'GLstop' in command_input:
-        G_sc.stopWiggle()
+        CLAW.stopWiggle()
 
     elif 'up' == command_input: # camera
-        T_sc.singleServo(4, -1, 1)
+        CAMERA.clockwise()
     elif 'down' == command_input:
-        T_sc.singleServo(4,1, 1)
+        CAMERA.anticlockwise()
     elif 'UDstop' in command_input:
-        T_sc.stopWiggle()
+        CAMERA.stopWiggle()
 
 
 
     elif 'home' == command_input:
-        H1_sc.moveServoInit(0)
-        H2_sc.moveServoInit(1)
-        P_sc.moveServoInit(2)
-        G_sc.moveServoInit(3)
-        T_sc.moveServoInit(4)
+        ARM.initialize()
+        HAND.initialize()
+        WRIST.initialize()
+        CLAW.initialize()
+        CAMERA.initialize()
         print("11")
 
 
@@ -266,55 +253,55 @@ def configPWM(command_input, response):
         numServo = int(command_input[7:])
         if numServo == 0:
             init_pwm0 -= 1
-            H1_sc.setPWM(0,init_pwm0)
+            ARM.setPWM(0,init_pwm0)
         elif numServo == 1:
             init_pwm1 -= 1
-            H2_sc.setPWM(1,init_pwm1)
+            HAND.setPWM(1,init_pwm1)
         elif numServo == 2:
             init_pwm2 -= 1
-            P_sc.setPWM(2,init_pwm2)
+            WRIST.setPWM(2,init_pwm2)
         elif numServo == 3:
             init_pwm3 -= 1
-            G_sc.setPWM(3,init_pwm3)
+            CLAW.setPWM(5,init_pwm3)
         elif numServo == 4:
             init_pwm4 -= 1
-            T_sc.setPWM(4,init_pwm4)
+            CAMERA.setPWM(4,init_pwm4)
 
     if 'SiRight' in command_input:
         numServo = int(command_input[8:])
         if numServo == 0:
             init_pwm0 += 1
-            T_sc.setPWM(0,init_pwm0)
+            CAMERA.setPWM(0,init_pwm0)
         elif numServo == 1:
             init_pwm1 += 1
-            P_sc.setPWM(1,init_pwm1)
+            WRIST.setPWM(1,init_pwm1)
         elif numServo == 2:
             init_pwm2 += 1
             scGear.setPWM(2,init_pwm2)
 
         if numServo == 0:
             init_pwm0 += 1
-            H1_sc.setPWM(0,init_pwm0)
+            ARM.setPWM(0,init_pwm0)
         elif numServo == 1:
             init_pwm1 += 1
-            H2_sc.setPWM(1,init_pwm1)
+            HAND.setPWM(1,init_pwm1)
         elif numServo == 2:
             init_pwm2 += 1
-            P_sc.setPWM(2,init_pwm2)
+            WRIST.setPWM(2,init_pwm2)
         elif numServo == 3:
             init_pwm3 += 1
-            G_sc.setPWM(3,init_pwm3)
+            CLAW.setPWM(5,init_pwm3)
         elif numServo == 4:
             init_pwm4 += 1
-            T_sc.setPWM(4,init_pwm4)
+            CAMERA.setPWM(4,init_pwm4)
 
     if 'PWMMS' in command_input:
         numServo = int(command_input[6:])
         if numServo == 0:
-            T_sc.initConfig(0, init_pwm0, 1)
+            CAMERA.initConfig(0, init_pwm0, 1)
             replace_num('init_pwm0 = ', init_pwm0)
         elif numServo == 1:
-            P_sc.initConfig(1, init_pwm1, 1)
+            WRIST.initConfig(1, init_pwm1, 1)
             replace_num('init_pwm1 = ', init_pwm1)
         elif numServo == 2:
             scGear.initConfig(2, init_pwm2, 2)
@@ -327,10 +314,10 @@ def configPWM(command_input, response):
 
     elif 'PWMD' == command_input:
         init_pwm0,init_pwm1,init_pwm2,init_pwm3,init_pwm4=90,90,90,90,90
-        T_sc.initConfig(0,90,1)
+        CAMERA.initConfig(0,90,1)
         replace_num('init_pwm0 = ', 90)
 
-        P_sc.initConfig(1,90,1)
+        WRIST.initConfig(1,90,1)
         replace_num('init_pwm1 = ', 90)
 
         scGear.initConfig(2,90,1)

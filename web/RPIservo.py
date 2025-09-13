@@ -35,12 +35,30 @@ servo_num = 8
 i2c = None
 pwm_servo = None
 
+class SingleServoCtrl():
+    def __init__(self, ID, init_pwm, direction):
+        self.__id = ID
+        self.__init_pwm = 90
+        self.direction = direction
+        self.ctrl = ServoCtrl()
+        self.ctrl.start()
+        
+    def initialize(self):
+        self.ctrl.initConfig(self.__id, self.__init_pwm, 1)
+        
+    def clockwise(self):
+        self.ctrl.singleServo(self.__id, self.direction, 1)
+        
+    def anticlockwise(self):
+        self.ctrl.singleServo(self.__id, -self.direction, 1)
+        
+    def stopWiggle(self):
+        self.ctrl.stopWiggle()
+        
+
 class ServoCtrl(threading.Thread):
 
     def __init__(self, *args, **kwargs):
-
-
-        
         # global i2c,pwm_servo
         self.i2c = busio.I2C(SCL, SDA)
         # Create a simple PCA9685 class instance.
@@ -84,7 +102,6 @@ class ServoCtrl(threading.Thread):
         super(ServoCtrl, self).__init__(*args, **kwargs)
         self.__flag = threading.Event()
         self.__flag.clear()
-
 
     def set_angle(self,ID, angle):
         servo_angle = servo.Servo(self.pwm_servo.channels[ID], min_pulse=500, max_pulse=2400,actuation_range=180)
