@@ -30,24 +30,34 @@ speed_set = 100
 rad = 0.5
 turnWiggle = 60
 
-scGear = RPIservo.ServoCtrl()
-# scGear.setup()
-scGear.moveInit()
+ARM = RPIservo.ServoCtrlThread(0, 90, 1)
+HAND = RPIservo.ServoCtrlThread(1, 90, -1)
+WRIST = RPIservo.ServoCtrlThread(2, 90, 1)
+CAMERA = RPIservo.ServoCtrlThread(4, 90, -1)
+CLAW = RPIservo.ServoCtrlThread(5, 90, 1)
 
-ARM = RPIservo.SingleServoCtrl(0, 90, 1)
-HAND = RPIservo.SingleServoCtrl(1, 90, -1)
-WRIST = RPIservo.SingleServoCtrl(2, 90, 1)
-CAMERA = RPIservo.SingleServoCtrl(4, 90, -1)
-CLAW = RPIservo.SingleServoCtrl(5, 90, 1)
+SERVOS = [ARM, HAND, WRIST, CLAW, CAMERA]
+
+controls = {
+  'armUp'    : ARM.clockwise,
+  'armDown'  : ARM.anticlockwise,
+  'armStop'  : ARM.stopWiggle,
+  'handUp'   : HAND.clockwise,
+  'handDown' : HAND.anticlockwise,
+  'handStop' : HAND.stopWiggle,
+  'lookleft' : WRIST.clockwise,
+  'lookright': WRIST.anticlockwise,
+  'LRstop'   : WRIST.stopWiggle,
+  'grab'     : CLAW.clockwise,
+  'loose'    : CLAW.anticlockwise,
+  'GLstop'   : CLAW.stopWiggle,
+  'up'       : CAMERA.clockwise,
+  'down'     : CAMERA.anticlockwise,
+  'UDstop'   : CAMERA.stopWiggle
+}
 
 # modeSelect = 'none'
 modeSelect = 'PT'
-
-init_pwm0 = scGear.initPos[0]
-init_pwm1 = scGear.initPos[1]
-init_pwm2 = scGear.initPos[2]
-init_pwm3 = scGear.initPos[5]
-init_pwm4 = scGear.initPos[4]
 
 fuc = functions.Functions()
 fuc.setup()
@@ -68,17 +78,17 @@ def servoPosInit():
     CLAW.initialize()
 
 
-def replace_num(initial,new_num):   #Call this function to replace data in '.txt' file
-    global r
-    newline=""
-    str_num=str(new_num)
-    with open(thisPath+"/RPIservo.py","r") as f:
-        for line in f.readlines():
-            if(line.find(initial) == 0):
-                line = initial+"%s" %(str_num+"\n")
-            newline += line
-    with open(thisPath+"/RPIservo.py","w") as f:
-        f.writelines(newline)
+# def replace_num(initial,new_num):   #Call this function to replace data in '.txt' file
+    # global r
+    # newline=""
+    # str_num=str(new_num)
+    # with open(thisPath+"/RPIservo.py","r") as f:
+        # for line in f.readlines():
+            # if(line.find(initial) == 0):
+                # line = initial+"%s" %(str_num+"\n")
+            # newline += line
+    # with open(thisPath+"/RPIservo.py","w") as f:
+        # f.writelines(newline)
 
 
 # def FPV_thread():
@@ -186,7 +196,6 @@ def robotCtrl(command_input, response):
         if turn_command == 'no':
             move.motorStop()
 
-
     elif 'left' == command_input:
         turn_command = 'left'
         move.move(speed_set, 1, "left")
@@ -199,43 +208,8 @@ def robotCtrl(command_input, response):
         turn_command = 'no'
         if direction_command == 'no':
             move.motorStop()
-
-    elif 'armUp' == command_input: #servo A
-        ARM.clockwise()
-    elif 'armDown' == command_input:
-        ARM.anticlockwise()
-    elif 'armStop' in command_input:
-        ARM.stopWiggle()
-
-    elif 'handUp' == command_input: # servo B
-        HAND.clockwise()
-    elif 'handDown' == command_input:
-        HAND.anticlockwise()
-    elif 'handStop' in command_input:
-        HAND.stopWiggle()
-
-    elif 'lookleft' == command_input: # servo C
-        WRIST.clockwise()
-    elif 'lookright' == command_input:
-        WRIST.anticlockwise()
-    elif 'LRstop' in command_input:
-        WRIST.stopWiggle()
-
-    elif 'grab' == command_input: # servo D
-        CLAW.clockwise()
-    elif 'loose' == command_input:
-        CLAW.anticlockwise()
-    elif 'GLstop' in command_input:
-        CLAW.stopWiggle()
-
-    elif 'up' == command_input: # camera
-        CAMERA.clockwise()
-    elif 'down' == command_input:
-        CAMERA.anticlockwise()
-    elif 'UDstop' in command_input:
-        CAMERA.stopWiggle()
-
-
+    elif command_input in controls:
+        controls[command_input]()
 
     elif 'home' == command_input:
         ARM.initialize()
@@ -243,86 +217,32 @@ def robotCtrl(command_input, response):
         WRIST.initialize()
         CLAW.initialize()
         CAMERA.initialize()
-        print("11")
 
 
 def configPWM(command_input, response):
-    global init_pwm0, init_pwm1, init_pwm2, init_pwm3, init_pwm4
-
+    
     if 'SiLeft' in command_input:
         numServo = int(command_input[7:])
-        if numServo == 0:
-            init_pwm0 -= 1
-            ARM.setPWM(0,init_pwm0)
-        elif numServo == 1:
-            init_pwm1 -= 1
-            HAND.setPWM(1,init_pwm1)
-        elif numServo == 2:
-            init_pwm2 -= 1
-            WRIST.setPWM(2,init_pwm2)
-        elif numServo == 3:
-            init_pwm3 -= 1
-            CLAW.setPWM(5,init_pwm3)
-        elif numServo == 4:
-            init_pwm4 -= 1
-            CAMERA.setPWM(4,init_pwm4)
+        SERVOS[numServo].derementPwm()
 
     if 'SiRight' in command_input:
         numServo = int(command_input[8:])
-        if numServo == 0:
-            init_pwm0 += 1
-            CAMERA.setPWM(0,init_pwm0)
-        elif numServo == 1:
-            init_pwm1 += 1
-            WRIST.setPWM(1,init_pwm1)
-        elif numServo == 2:
-            init_pwm2 += 1
-            scGear.setPWM(2,init_pwm2)
-
-        if numServo == 0:
-            init_pwm0 += 1
-            ARM.setPWM(0,init_pwm0)
-        elif numServo == 1:
-            init_pwm1 += 1
-            HAND.setPWM(1,init_pwm1)
-        elif numServo == 2:
-            init_pwm2 += 1
-            WRIST.setPWM(2,init_pwm2)
-        elif numServo == 3:
-            init_pwm3 += 1
-            CLAW.setPWM(5,init_pwm3)
-        elif numServo == 4:
-            init_pwm4 += 1
-            CAMERA.setPWM(4,init_pwm4)
+        SERVOS[numServo].incrementPwm()
 
     if 'PWMMS' in command_input:
         numServo = int(command_input[6:])
-        if numServo == 0:
-            CAMERA.initConfig(0, init_pwm0, 1)
-            replace_num('init_pwm0 = ', init_pwm0)
-        elif numServo == 1:
-            WRIST.initConfig(1, init_pwm1, 1)
-            replace_num('init_pwm1 = ', init_pwm1)
-        elif numServo == 2:
-            scGear.initConfig(2, init_pwm2, 2)
-            replace_num('init_pwm2 = ', init_pwm2)
-
+        SERVOS[numServo].initialize()
 
     if 'PWMINIT' == command_input:
         print(init_pwm1)
         servoPosInit()
 
     elif 'PWMD' == command_input:
-        init_pwm0,init_pwm1,init_pwm2,init_pwm3,init_pwm4=90,90,90,90,90
-        CAMERA.initConfig(0,90,1)
-        replace_num('init_pwm0 = ', 90)
-
-        WRIST.initConfig(1,90,1)
-        replace_num('init_pwm1 = ', 90)
-
-        scGear.initConfig(2,90,1)
-        replace_num('init_pwm2 = ', 90)
-
+        ARM.initialize()
+        HAND.initialize()
+        WRIST.initialize()
+        CLAW.initialize()
+        CAMERA.initialize()
 
 def update_code():
     # Update local to be consistent with remote

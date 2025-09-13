@@ -35,25 +35,38 @@ servo_num = 8
 i2c = None
 pwm_servo = None
 
-class SingleServoCtrl():
-    def __init__(self, ID, init_pwm, direction):
+class ServoCtrlThread():
+    def __init__(self, ID, initPos, direction):
         self.__id = ID
-        self.__init_pwm = 90
-        self.direction = direction
+        self.initPos = initPos
+        self.nowPos = initPos
+        self.sc_direction = direction
         self.ctrl = ServoCtrl()
         self.ctrl.start()
         
     def initialize(self):
-        self.ctrl.initConfig(self.__id, self.__init_pwm, 1)
-        
+        self.ctrl.initConfig(self.__id, self.initPos, 1)
+    
+    ########## SERVO Action
     def clockwise(self):
-        self.ctrl.singleServo(self.__id, self.direction, 1)
+        self.ctrl.singleServo(self.__id, self.sc_direction, 1)
         
     def anticlockwise(self):
-        self.ctrl.singleServo(self.__id, -self.direction, 1)
+        self.ctrl.singleServo(self.__id, -self.sc_direction, 1)
         
     def stopWiggle(self):
         self.ctrl.stopWiggle()
+        
+    ########## SERVO PWM
+    def incrementPwm(self):
+        self.setPWM(self.nowPos + 1)
+        
+    def derementPwm(self):
+        self.setPWM(self.nowPos - 1)
+        
+    def setPWM(self, pwm):
+        self.nowPos = pwm
+        self.ctrl.setPWM(self.__id, pwm)
         
 
 class ServoCtrl(threading.Thread):
@@ -111,7 +124,6 @@ class ServoCtrl(threading.Thread):
     def pause(self):
         print('......................pause..........................')
         self.__flag.clear()
-
 
     def resume(self):
         print('resume')
