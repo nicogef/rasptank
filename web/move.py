@@ -47,6 +47,52 @@ Motor interface.
        |     |
     M2 |_____| M1
 '''
+class MovementCtrlThread():
+    
+    def __init__(self, motor1_direction, motor2_direction):
+        i2c = busio.I2C(SCL, SDA)
+        # Create a simple PCA9685 class instance.
+        #  pwm_motor.channels[7].duty_cycle = 0xFFFF
+        self.pwm_motor = PCA9685(i2c, address=0x5f) #default 0x40
+        self.pwm_motor.frequency = FREQ
+        
+        self.motor1 = motor.DCMotor(pwm_motor.channels[MOTOR_M1_IN1],pwm_motor.channels[MOTOR_M1_IN2] )
+        self.motor1.decay_mode = (motor.SLOW_DECAY)
+        self.motor1_direction = motor1_direction
+        
+        self.motor2 = motor.DCMotor(pwm_motor.channels[MOTOR_M2_IN1],pwm_motor.channels[MOTOR_M2_IN2] )
+        self.motor2.decay_mode = (motor.SLOW_DECAY)
+        self.motor2_direction = motor2_direction
+        
+        self.speed = 100
+        
+    def forward(self):
+        Motor(1, self.motor1_direction, self.speed)
+        Motor(2, self.motor2_direction, self.speed)
+        
+    def backward(self):
+        Motor(1, -self.motor1_direction, self.speed)
+        Motor(2, -self.motor2_direction, self.speed)
+        
+    def left(self):
+        Motor(1, self.motor1_direction, self.speed)
+        Motor(2, -self.motor2_direction, self.speed)
+
+    def right(self):
+        Motor(1, -self.motor1_direction, self.speed)
+        Motor(2, self.motor2_direction, self.speed)
+        
+    def destroy(self):
+        motorStop()
+        pwm_motor.deinit()
+    
+    def stop(self):
+        self.motor1.throttle = 0
+        self.motor2.throttle = 0
+        
+    def setSpeed(self, speed):
+        self.speed = speed
+        
 
 def map(x,in_min,in_max,out_min,out_max):
   return (x - in_min)/(in_max - in_min) *(out_max - out_min) +out_min

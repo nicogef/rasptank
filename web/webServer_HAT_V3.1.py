@@ -25,40 +25,54 @@ import app
 
 OLED_connection = 0
 
-
 functionMode = 0
 speed_set = 100
 rad = 0.5
 turnWiggle = 60
 
-scGear = RPIservo.ServoCtrl()
-# scGear.setup()
-scGear.moveInit()
+controler = RPIservo.ServoCtrl()
+#controler.start()
 
-P_sc = RPIservo.ServoCtrl()
-P_sc.start()
+ARM = RPIservo.ServoCtrlThread("ARM", controler, 0, 90, 1)
+HAND = RPIservo.ServoCtrlThread("HAND", controler, 1, 90, -1)
+WRIST = RPIservo.ServoCtrlThread("WRIST", controler, 2, 90, 1)
+# 3 is detroyed using 5 instead
+CLAW = RPIservo.ServoCtrlThread("CLAW", controler, 5, 90, 1)
+CAMERA = RPIservo.ServoCtrlThread("CAMERA", controler, 4, 90, -1)
 
-T_sc = RPIservo.ServoCtrl()
-T_sc.start()
+SERVOS = [ARM, HAND, WRIST, CLAW, CAMERA]
 
-H1_sc = RPIservo.ServoCtrl()
-H1_sc.start()
+MOVEMENT=move.MovementCtrlThread(-1, -1)
 
-H2_sc = RPIservo.ServoCtrl()
-H2_sc.start()
-
-G_sc = RPIservo.ServoCtrl()
-G_sc.start()
-
+controls = {
+  # Servos
+  'armUp'    : ARM.clockwise,
+  'armDown'  : ARM.anticlockwise,
+  'armStop'  : ARM.stopWiggle,
+  'handUp'   : HAND.clockwise,
+  'handDown' : HAND.anticlockwise,
+  'handStop' : HAND.stopWiggle,
+  'lookleft' : WRIST.clockwise,
+  'lookright': WRIST.anticlockwise,
+  'LRstop'   : WRIST.stopWiggle,
+  'grab'     : CLAW.clockwise,
+  'loose'    : CLAW.anticlockwise,
+  'GLstop'   : CLAW.stopWiggle,
+  'up'       : CAMERA.clockwise,
+  'down'     : CAMERA.anticlockwise,
+  'UDstop'   : CAMERA.stopWiggle,
+  'home'     : lambda: servoPosInit(),
+  # Motors
+  'forward'  : MOVEMENT.forward,
+  'backward' : MOVEMENT.backward,
+  'left'     : MOVEMENT.left,
+  'right'    : MOVEMENT.right,
+  'DS'       : MOVEMENT.stop,
+  'TS'       : MOVEMENT.stop
+}
 
 # modeSelect = 'none'
 modeSelect = 'PT'
-
-init_pwm0 = scGear.initPos[0]
-init_pwm1 = scGear.initPos[1]
-init_pwm2 = scGear.initPos[2]
-init_pwm3 = scGear.initPos[3]
-init_pwm4 = scGear.initPos[4]
 
 fuc = functions.Functions()
 fuc.setup()
@@ -71,26 +85,24 @@ direction_command = 'no'
 turn_command = 'no'
 
 def servoPosInit():
-
-    scGear.initConfig(0,init_pwm0,1)
-    P_sc.initConfig(1,init_pwm1,1)
-    T_sc.initConfig(2,init_pwm2,1)
-    H1_sc.initConfig(3,init_pwm3,1)
-    H2_sc.initConfig(3,init_pwm3,1)
-    G_sc.initConfig(4,init_pwm4,1)
+    ARM.reset()
+    HAND.reset()
+    WRIST.reset()
+    CAMERA.reset()
+    CLAW.reset()
 
 
-def replace_num(initial,new_num):   #Call this function to replace data in '.txt' file
-    global r
-    newline=""
-    str_num=str(new_num)
-    with open(thisPath+"/RPIservo.py","r") as f:
-        for line in f.readlines():
-            if(line.find(initial) == 0):
-                line = initial+"%s" %(str_num+"\n")
-            newline += line
-    with open(thisPath+"/RPIservo.py","w") as f:
-        f.writelines(newline)
+# def replace_num(initial,new_num):   #Call this function to replace data in '.txt' file
+    # global r
+    # newline=""
+    # str_num=str(new_num)
+    # with open(thisPath+"/RPIservo.py","r") as f:
+        # for line in f.readlines():
+            # if(line.find(initial) == 0):
+                # line = initial+"%s" %(str_num+"\n")
+            # newline += line
+    # with open(thisPath+"/RPIservo.py","w") as f:
+        # f.writelines(newline)
 
 
 # def FPV_thread():
@@ -154,12 +166,11 @@ def functionSelect(command_input, response):
         move.motorStop()
 
     elif 'steadyCamera' == command_input:
-        fuc.steady(T_sc.lastPos[2])
+        fuc.steady(CAMERA.lastPos[2])
 
     elif 'steadyCameraOff' == command_input:
         fuc.pause()
         move.motorStop()
-
 
 
 
@@ -182,160 +193,26 @@ def switchCtrl(command_input, response):
     elif 'Switch_3_off' in command_input:
         switch.switch(3,0) 
 
-
-def robotCtrl(command_input, response):
-    global direction_command, turn_command
-    if 'forward' == command_input:
-        direction_command = 'forward'
-        move.move(speed_set, 1, "mid")
-        print("1111")
-    
-    elif 'backward' == command_input:
-        direction_command = 'backward'
-        move.move(speed_set, -1, "no")
-
-    elif 'DS' in command_input:
-        direction_command = 'no'
-        if turn_command == 'no':
-            move.motorStop()
-
-
-    elif 'left' == command_input:
-        turn_command = 'left'
-        move.move(speed_set, 1, "left")
-
-    elif 'right' == command_input:
-        turn_command = 'right'
-        move.move(speed_set, 1, "right")
-
-    elif 'TS' in command_input:
-        turn_command = 'no'
-        if direction_command == 'no':
-            move.motorStop()
-
-    elif 'armUp' == command_input: #servo A
-        H1_sc.singleServo(0, 1, 2)
-    elif 'armDown' == command_input:
-        H1_sc.singleServo(0,-1, 2)
-    elif 'armStop' in command_input:
-        H1_sc.stopWiggle()
-
-    elif 'handUp' == command_input: # servo B
-        H2_sc.singleServo(1, -1, 2)
-    elif 'handDown' == command_input:
-        H2_sc.singleServo(1,1, 2)
-    elif 'handStop' in command_input:
-        H2_sc.stopWiggle()
-
-    elif 'lookleft' == command_input: # servo C
-        P_sc.singleServo(2, 1, 2)
-    elif 'lookright' == command_input:
-        P_sc.singleServo(2,-1, 2)
-    elif 'LRstop' in command_input:
-        P_sc.stopWiggle()
-
-    elif 'grab' == command_input: # servo D
-        G_sc.singleServo(3, 1, 2)
-    elif 'loose' == command_input:
-        G_sc.singleServo(3,-1, 2)
-    elif 'GLstop' in command_input:
-        G_sc.stopWiggle()
-
-    elif 'up' == command_input: # camera
-        T_sc.singleServo(4, -1, 1)
-    elif 'down' == command_input:
-        T_sc.singleServo(4,1, 1)
-    elif 'UDstop' in command_input:
-        T_sc.stopWiggle()
-
-
-
-    elif 'home' == command_input:
-        H1_sc.moveServoInit(0)
-        H2_sc.moveServoInit(1)
-        P_sc.moveServoInit(2)
-        G_sc.moveServoInit(3)
-        T_sc.moveServoInit(4)
-        print("11")
-
-
 def configPWM(command_input, response):
-    global init_pwm0, init_pwm1, init_pwm2, init_pwm3, init_pwm4
-
+    
     if 'SiLeft' in command_input:
         numServo = int(command_input[7:])
-        if numServo == 0:
-            init_pwm0 -= 1
-            H1_sc.setPWM(0,init_pwm0)
-        elif numServo == 1:
-            init_pwm1 -= 1
-            H2_sc.setPWM(1,init_pwm1)
-        elif numServo == 2:
-            init_pwm2 -= 1
-            P_sc.setPWM(2,init_pwm2)
-        elif numServo == 3:
-            init_pwm3 -= 1
-            G_sc.setPWM(3,init_pwm3)
-        elif numServo == 4:
-            init_pwm4 -= 1
-            T_sc.setPWM(4,init_pwm4)
+        SERVOS[numServo].derementPwm()
 
     if 'SiRight' in command_input:
         numServo = int(command_input[8:])
-        if numServo == 0:
-            init_pwm0 += 1
-            T_sc.setPWM(0,init_pwm0)
-        elif numServo == 1:
-            init_pwm1 += 1
-            P_sc.setPWM(1,init_pwm1)
-        elif numServo == 2:
-            init_pwm2 += 1
-            scGear.setPWM(2,init_pwm2)
-
-        if numServo == 0:
-            init_pwm0 += 1
-            H1_sc.setPWM(0,init_pwm0)
-        elif numServo == 1:
-            init_pwm1 += 1
-            H2_sc.setPWM(1,init_pwm1)
-        elif numServo == 2:
-            init_pwm2 += 1
-            P_sc.setPWM(2,init_pwm2)
-        elif numServo == 3:
-            init_pwm3 += 1
-            G_sc.setPWM(3,init_pwm3)
-        elif numServo == 4:
-            init_pwm4 += 1
-            T_sc.setPWM(4,init_pwm4)
+        SERVOS[numServo].incrementPwm()
 
     if 'PWMMS' in command_input:
         numServo = int(command_input[6:])
-        if numServo == 0:
-            T_sc.initConfig(0, init_pwm0, 1)
-            replace_num('init_pwm0 = ', init_pwm0)
-        elif numServo == 1:
-            P_sc.initConfig(1, init_pwm1, 1)
-            replace_num('init_pwm1 = ', init_pwm1)
-        elif numServo == 2:
-            scGear.initConfig(2, init_pwm2, 2)
-            replace_num('init_pwm2 = ', init_pwm2)
-
+        SERVOS[numServo].initialize()
 
     if 'PWMINIT' == command_input:
         print(init_pwm1)
         servoPosInit()
 
     elif 'PWMD' == command_input:
-        init_pwm0,init_pwm1,init_pwm2,init_pwm3,init_pwm4=90,90,90,90,90
-        T_sc.initConfig(0,90,1)
-        replace_num('init_pwm0 = ', 90)
-
-        P_sc.initConfig(1,90,1)
-        replace_num('init_pwm1 = ', 90)
-
-        scGear.initConfig(2,90,1)
-        replace_num('init_pwm2 = ', 90)
-
+        servoPosInit()
 
 def update_code():
     # Update local to be consistent with remote
@@ -399,7 +276,8 @@ async def recv_msg(websocket):
             continue
 
         if isinstance(data,str):
-            robotCtrl(data, response)
+            if data in controls:
+                controls[data]()
 
             switchCtrl(data, response)
 
@@ -413,8 +291,7 @@ async def recv_msg(websocket):
 
             if 'wsB' in data:
                 try:
-                    set_B=data.split()
-                    speed_set = int(set_B[1])
+                    MOVEMENT.setSpeed(int(data.split()[1]))
                 except:
                     pass
 
