@@ -25,15 +25,4 @@ comment:
   require_changes: no
 
 ignore:
-  - "tests/"
-  - "**/__pycache__"
-  - "*.pyc"
-  - "setup.py"
-  - "venv/"
-  - ".venv/"
-  - "Client"
-  - "htmlcov"
-  - "web"
-  - "build"
-  - "dist"
   - "src/hardware/"

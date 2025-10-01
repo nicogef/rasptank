@@ -3,8 +3,12 @@
 **/__pycache__/
 *.pyc
 *.py~
+
+# Test and coverage reports
 coverage.xml
-htmlcov
+htmlcov/
+.coverage
+junit.xml
 
 # Windows temporary files
 *.swp
