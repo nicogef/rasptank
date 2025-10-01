@@ -1,6 +1,6 @@
 [flake8]
 count = True
-exit-zero = True
+exit-zero = False
 max-complexity = 10
 max-line-length = 127
 statistics = True
