@@ -38,11 +38,11 @@ jobs:
       run: |
          bandit -r . -f json -o bandit.json || true
          if [ -s bandit.json ]; then
-          python bandit_json_to_sarif.py bandit.json bandit.sarif
-          test -s bandit.sarif || { echo "bandit.sarif missing"; exit 1; }
-        else
-          echo "Skipping Bandit SARIF (no bandit.json)."
-        fi
+           python bandit_json_to_sarif.py bandit.json bandit.sarif
+           test -s bandit.sarif || { echo "bandit.sarif missing"; exit 1; }
+         else
+           echo "Skipping Bandit SARIF (no bandit.json)."
+         fi
 
     - name: Run pip-audit
       run: |
