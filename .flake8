@@ -16,4 +16,5 @@ exclude =
     htmlcov,
     web,
     build,
-    dist
+    dist,
+    src/hardware,

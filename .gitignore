@@ -3,7 +3,6 @@
 **/__pycache__/
 *.pyc
 *.py~
-.coverage
 coverage.xml
 htmlcov
 
