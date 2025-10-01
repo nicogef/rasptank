@@ -1,6 +1,7 @@
 # File: bandit_json_to_sarif.py
 #!/usr/bin/env python3
 import json, sys, hashlib, datetime, pathlib
+from datetime import datetime, UTC
 
 SEV_TO_LEVEL = {
     "HIGH": "error",
@@ -70,7 +71,7 @@ def main(inp, outp):
             },
             "invocations": [{
                 "executionSuccessful": True,
-                "endTimeUtc": datetime.datetime.utcnow().isoformat() + "Z"
+                "endTimeUtc": datetime.now(UTC).isoformat().replace("+00:00", "Z")
             }],
             "results": sarif_results
         }]

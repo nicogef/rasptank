@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json, sys, hashlib, datetime, pathlib
+from datetime import datetime, UTC
 
 def load(path):
     with open(path, "r", encoding="utf-8") as f:
@@ -66,7 +67,7 @@ def main(inp, outp):
             },
             "invocations": [{
                 "executionSuccessful": True,
-                "endTimeUtc": datetime.datetime.utcnow().isoformat() + "Z"
+                "endTimeUtc": datetime.now(UTC).isoformat().replace("+00:00", "Z")
             }],
             "results": results
         }]
