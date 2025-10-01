@@ -1,5 +1,6 @@
 import time
 
+
 def wait_for(predicate, timeout_seconds=10, interval=0.1):
     """
     Poll `predicate()` until it returns True or `timeout` seconds elapse.

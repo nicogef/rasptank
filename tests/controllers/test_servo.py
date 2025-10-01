@@ -4,8 +4,7 @@ import unittest
 from unittest.mock import MagicMock
 
 from tests import async_helper
-from web.controllers import servo as servo_module
-from web.controllers.servo import ANTICLOCKWISE
+from src.controllers.servo import ServoCtrlThread, ANTICLOCKWISE
 
 
 class FakeServo:
@@ -22,7 +21,7 @@ class TestServoCtrlThread(unittest.TestCase):
         controller.servo = lambda ch: self.fake_servo
 
         # instantiate while thread start is patched
-        self.svc = servo_module.ServoCtrlThread("test", controller, 0, 90, 1)
+        self.svc = ServoCtrlThread("test", controller, 0, 90, 1)
 
     def tearDown(self):
         try:
@@ -49,7 +48,9 @@ class TestServoCtrlThread(unittest.TestCase):
     def test_set_angle_clips_to_max(self):
         # set beyond maximum -> clipped to angle_maximum_range (180)
         self.svc.move_to(200)
-        async_helper.wait_for(lambda: self.assert_angle_reached(self.svc.angle_maximum_range))
+        async_helper.wait_for(
+            lambda: self.assert_angle_reached(self.svc.angle_maximum_range)
+        )
 
     def test_set_angle_stops(self):
         self.svc.move_to(180)
@@ -58,7 +59,9 @@ class TestServoCtrlThread(unittest.TestCase):
 
     def test_set_angle_clips_to_min(self):
         self.svc.move_to(-15)
-        async_helper.wait_for(lambda: self.assert_angle_reached(self.svc.angle_minimum_range))
+        async_helper.wait_for(
+            lambda: self.assert_angle_reached(self.svc.angle_minimum_range)
+        )
 
     def test_increment_and_decrement_pwm(self):
         # start from 90 by default
@@ -71,11 +74,15 @@ class TestServoCtrlThread(unittest.TestCase):
 
     def test_clockwise(self):
         self.svc.clockwise()
-        async_helper.wait_for(lambda: self.assert_angle_reached(self.svc.angle_maximum_range))
+        async_helper.wait_for(
+            lambda: self.assert_angle_reached(self.svc.angle_maximum_range)
+        )
 
     def test_anticlockwise(self):
         self.svc.anticlockwise()
-        async_helper.wait_for(lambda: self.assert_angle_reached(self.svc.angle_minimum_range))
+        async_helper.wait_for(
+            lambda: self.assert_angle_reached(self.svc.angle_minimum_range)
+        )
 
     def test_move_by_number_of_steps(self):
         expected_angle = self.svc.angle_current_value + 10
@@ -83,15 +90,19 @@ class TestServoCtrlThread(unittest.TestCase):
         async_helper.wait_for(lambda: self.assert_angle_reached(expected_angle))
 
     def test_clockwise_reversed_direction(self):
-        self.svc.servo_direction=ANTICLOCKWISE
+        self.svc.servo_direction = ANTICLOCKWISE
         self.svc.clockwise()
-        async_helper.wait_for(lambda: self.assert_angle_reached(self.svc.angle_minimum_range))
+        async_helper.wait_for(
+            lambda: self.assert_angle_reached(self.svc.angle_minimum_range)
+        )
 
     def test_anticlockwise_reversed_direction(self):
         # set beyond maximum -> clipped to angle_maximum_range (180)
-        self.svc.servo_direction=ANTICLOCKWISE
+        self.svc.servo_direction = ANTICLOCKWISE
         self.svc.anticlockwise()
-        async_helper.wait_for(lambda: self.assert_angle_reached(self.svc.angle_maximum_range))
+        async_helper.wait_for(
+            lambda: self.assert_angle_reached(self.svc.angle_maximum_range)
+        )
 
     def assert_angle_reached(self, expected):
         try:
@@ -110,6 +121,7 @@ class TestServoCtrlThread(unittest.TestCase):
             return True
         except AssertionError:
             return False
+
 
 if __name__ == "__main__":
     unittest.main()

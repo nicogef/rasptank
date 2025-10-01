@@ -4,6 +4,8 @@
 *.pyc
 *.py~
 .coverage
+coverage.xml
+htmlcov
 
 # Windows temporary files
 *.swp

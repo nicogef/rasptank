@@ -5,12 +5,14 @@ class MockMotor:
     def __repr__(self):
         return f"<MockMotor throttle={self.throttle}>"
 
+
 class MockServo:
     def __init__(self):
         self.angle = None
 
     def __repr__(self):
         return f"<MockServo angle={self.angle}>"
+
 
 class MockController:
     def __init__(self, motors=None, servos=None, dc_motors=None):

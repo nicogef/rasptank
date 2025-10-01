@@ -1,3 +1,7 @@
+FORWARD = 1
+REVERSE = -1
+
+
 class Movement:
 
     def __init__(self, controller, motor1_direction, motor2_direction):
@@ -12,15 +16,15 @@ class Movement:
         self.__motor2.throttle = self.__motor2_direction * self.__speed
 
     def backward(self):
-        self.__motor1.throttle = -self.__motor1_direction * self.__speed
-        self.__motor2.throttle = -self.__motor2_direction * self.__speed
+        self.__motor1.throttle = self.__motor1_direction * REVERSE * self.__speed
+        self.__motor2.throttle = self.__motor2_direction * REVERSE * self.__speed
 
     def left(self, angle=90):
         self.__motor1.throttle = self.__motor1_direction * self.__speed
-        self.__motor2.throttle = -self.__motor2_direction * self.__speed
+        self.__motor2.throttle = self.__motor2_direction * REVERSE * self.__speed
 
     def right(self):
-        self.__motor1.throttle = -self.__motor1_direction * self.__speed
+        self.__motor1.throttle = self.__motor1_direction * REVERSE * self.__speed
         self.__motor2.throttle = self.__motor2_direction * self.__speed
 
     def stop(self):
