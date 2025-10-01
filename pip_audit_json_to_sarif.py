@@ -2,9 +2,11 @@
 import json, sys, hashlib, datetime, pathlib
 from datetime import datetime, UTC
 
+
 def load(path):
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
+
 
 def make_rule(advisory):
     rule_id = advisory.get("id") or advisory.get("advisory_id") or "UNKNOWN"
@@ -15,16 +17,17 @@ def make_rule(advisory):
         "fullDescription": {"text": advisory.get("description") or "No description"},
         "help": {
             "text": advisory.get("description") or "",
-            "markdown": advisory.get("description") or ""
-        }
+            "markdown": advisory.get("description") or "",
+        },
     }
+
 
 def make_result(pkg, advisory):
     rule_id = advisory.get("id") or advisory.get("advisory_id") or "UNKNOWN"
     loc = {
         "physicalLocation": {
             "artifactLocation": {"uri": "requirements.txt"},
-            "region": {"startLine": 1}
+            "region": {"startLine": 1},
         }
     }
     message = f"{pkg['name']} {pkg['version']} vulnerable: {rule_id}. Fix versions: {', '.join(advisory.get('fix_versions', []) or ['(none)'])}"
@@ -36,8 +39,9 @@ def make_result(pkg, advisory):
         "level": "error",
         "message": {"text": message},
         "locations": [loc],
-        "fingerprints": {"issueInstance": fingerprint}
+        "fingerprints": {"issueInstance": fingerprint},
     }
+
 
 def main(inp, outp):
     data = load(inp)
@@ -52,30 +56,49 @@ def main(inp, outp):
         rule_id = advisory.get("id") or advisory.get("advisory_id") or "UNKNOWN"
         if rule_id not in rules:
             rules[rule_id] = make_rule(advisory)
-        results.append(make_result({"name": pkg.get("name"), "version": v.get("dependency", {}).get("version") or v.get("version")}, advisory))
+        results.append(
+            make_result(
+                {
+                    "name": pkg.get("name"),
+                    "version": v.get("dependency", {}).get("version")
+                    or v.get("version"),
+                },
+                advisory,
+            )
+        )
 
     sarif = {
         "version": "2.1.0",
         "$schema": "https://schemastore.azurewebsites.net/schemas/json/sarif-2.1.0.json",
-        "runs": [{
-            "tool": {
-                "driver": {
-                    "name": "pip-audit",
-                    "informationUri": "https://github.com/pypa/pip-audit",
-                    "rules": list(rules.values())
-                }
-            },
-            "invocations": [{
-                "executionSuccessful": True,
-                "endTimeUtc": datetime.now(UTC).isoformat().replace("+00:00", "Z")
-            }],
-            "results": results
-        }]
+        "runs": [
+            {
+                "tool": {
+                    "driver": {
+                        "name": "pip-audit",
+                        "informationUri": "https://github.com/pypa/pip-audit",
+                        "rules": list(rules.values()),
+                    }
+                },
+                "invocations": [
+                    {
+                        "executionSuccessful": True,
+                        "endTimeUtc": datetime.now(UTC)
+                        .isoformat()
+                        .replace("+00:00", "Z"),
+                    }
+                ],
+                "results": results,
+            }
+        ],
     }
     pathlib.Path(outp).write_text(json.dumps(sarif, indent=2), encoding="utf-8")
 
+
 if __name__ == "__main__":
     if len(sys.argv) != 3:
-        print("Usage: pip_audit_json_to_sarif.py pip-audit.json pip-audit.sarif", file=sys.stderr)
+        print(
+            "Usage: pip_audit_json_to_sarif.py pip-audit.json pip-audit.sarif",
+            file=sys.stderr,
+        )
         sys.exit(1)
     main(sys.argv[1], sys.argv[2])

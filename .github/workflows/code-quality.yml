@@ -58,6 +58,8 @@ jobs:
         path: |
           bandit.json
           pip-audit.json
+          bandit.sarif
+          pip-audit.sarif
 
     - name: Python type checking
       run: mypy .
