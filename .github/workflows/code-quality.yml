@@ -41,12 +41,14 @@ jobs:
         bandit -r . -f json -o bandit.json || true
         python bandit_json_to_sarif.py bandit.json bandit.sarif || true
         pip-audit --format=json --output=pip-audit.json || true
+        python pip_audit_json_to_sarif.py pip-audit.json pip-audit.sarif || true
 
     - name: Upload SARIF to GitHub
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: |
           bandit.sarif
+          pip-audit.sarif
 
     - name: Upload raw reports as artifacts
       if: always()
