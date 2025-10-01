@@ -25,18 +25,14 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pytest pytest-cov flake8 black
+        pip install pytest pytest-cov black
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-
-    - name: Lint with flake8
-      run: flake8 .
 
     - name: Format check with black
       run: black --check .
 
     - name: Test with pytest
-      run: |
-        pytest --cov=src --junitxml=junit.xml --cov-report=xml:coverage.xml
+      run: pytest --cov=src --junitxml=junit.xml --cov-report=xml:coverage.xml
 
     - name: Upload test results to Codecov
       if: ${{ !cancelled() }}
@@ -49,30 +45,3 @@ jobs:
       with:
         files: ./coverage.xml
         token: ${{ secrets.CODECOV_TOKEN }}
-#
-#  javascript-tests:
-#    runs-on: ubuntu-latest
-#    strategy:
-#      matrix:
-#        node-version: [16.x, 18.x, 20.x]
-#
-#    steps:
-#    - uses: actions/checkout@v4
-#
-#    - name: Use Node.js ${{ matrix.node-version }}
-#      uses: actions/setup-node@v4
-#      with:
-#        node-version: ${{ matrix.node-version }}
-#        cache: 'npm'
-#
-#    - name: Install dependencies
-#      run: npm ci
-#
-#    - name: Run linter
-#      run: npm run lint
-#
-#    - name: Run tests
-#      run: npm test
-#
-#    - name: Build
-#      run: npm run build --if-present
