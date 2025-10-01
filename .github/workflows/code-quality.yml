@@ -57,12 +57,6 @@ jobs:
     - name: List generated files
       run: ls -l *.json *.sarif || true
 
-    - name: Upload SARIF to GitHub
-      uses: github/codeql-action/upload-sarif@v3
-      with:
-        sarif_file: bandit.sarif
-      continue-on-error: true
-
     - name: Upload raw reports as artifacts
       if: always()
       uses: actions/upload-artifact@v4
@@ -73,6 +67,16 @@ jobs:
           pip-audit.json
           bandit.sarif
           pip-audit.sarif
+
+    - name: Upload bandit SARIF to GitHub
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: bandit.sarif
+
+    - name: Upload pip-audit SARIF to GitHub
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: pip-audit.sarif
 
     - name: Python type checking
       run: mypy .
