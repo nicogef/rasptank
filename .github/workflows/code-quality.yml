@@ -29,7 +29,7 @@ jobs:
 
     - name: Install Python dependencies
       run: |
-        pip install bandit mypy pip-audit  bandit2sarif
+        pip install bandit mypy pip-audit bandit2sarif
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
 #    - name: Install Node.js dependencies
@@ -39,7 +39,7 @@ jobs:
       run: |
         # To uncomment the following lines, ensure you have a .bandit file configured
         bandit -r . -f json -o bandit.json || true
-        bandit2sarif -i bandit.json -o bandit.sarif || true
+        python bandit_json_to_sarif.py bandit.json bandit.sarif || true
         pip-audit --format=json --output=pip-audit.json || true
 
     - name: Upload SARIF to GitHub
@@ -55,7 +55,6 @@ jobs:
         name: security-reports
         path: |
           bandit.json
-          bandit.html
           pip-audit.json
 
     - name: Python type checking
