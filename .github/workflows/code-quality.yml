@@ -46,7 +46,7 @@ jobs:
         path: src/  # comma-separated list of paths (files or directories)
         # level: Report only issues of a given severity level or higher. LOW, MEDIUM, HIGH or UNDEFINED (default)
         # confidence: Report only issues of a given confidence level or higher. LOW, MEDIUM, HIGH or UNDEFINED (default)
-        # excluded_paths: comma-separated list of paths (glob patterns supported)
+        excluded_paths: web/ # comma-separated list of paths (glob patterns supported)
         # skips: comma-separated list of test IDs to skip
         # ini_path: .bandit file that supplies command line arguments
 
@@ -73,6 +73,17 @@ jobs:
       uses: github/codeql-action/analyze@v3
       with:
         category: "/language:${{matrix.language}}"
+
+    - name: Python dependency vulnerability check (pip-audit)
+      run: |
+        pip-audit --format=sarif --output=pip-audit-results.sarif --progress-spinner=off || true
+
+    - name: Upload pip-audit SARIF results
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: pip-audit-results.sarif
+        category: pip-audit
 
 #    - name: Python type checking
 #      run: mypy .
