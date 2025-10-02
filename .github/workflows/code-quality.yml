@@ -14,7 +14,15 @@ jobs:
       contents: read # for actions/checkout to fetch code
       security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
       actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
-
+      packages: read # required to fetch internal or private CodeQL packs
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - language: actions
+          build-mode: none
+        - language: python
+          build-mode: none
     steps:
     - uses: actions/checkout@v4
       with:
@@ -35,7 +43,7 @@ jobs:
       with:
         exit_zero: true # exit with 0, even with results found
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed to get PR information.
-        # path:  File or directory to run bandit on
+        path: src/  # comma-separated list of paths (files or directories)
         # level: Report only issues of a given severity level or higher. LOW, MEDIUM, HIGH or UNDEFINED (default)
         # confidence: Report only issues of a given confidence level or higher. LOW, MEDIUM, HIGH or UNDEFINED (default)
         # excluded_paths: comma-separated list of paths (glob patterns supported)
@@ -45,29 +53,26 @@ jobs:
     - name: lint code (pylint)
       run: pylint --rcfile=.pylintrc .
 
-    - name: Run pip-audit
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: ${{ matrix.language }}
+        build-mode: ${{ matrix.build-mode }}
+
+    - if: matrix.build-mode == 'manual'
+      shell: bash
       run: |
-        pip-audit --format=json --output=pip-audit.json || true
-        if [ -s pip-audit.json ]; then
-          python pip_audit_json_to_sarif.py pip-audit.json pip-audit.sarif
-          test -s pip-audit.sarif || { echo "pip-audit.sarif missing"; exit 1; }
-        else
-          echo "Skipping pip-audit SARIF (no pip-audit.json)."
-        fi
+        echo 'If you are using a "manual" build mode for one or more of the' \
+          'languages you are analyzing, replace this with the commands to build' \
+          'your code, for example:'
+        echo '  make bootstrap'
+        echo '  make release'
+        exit 1
 
-    - name: Upload raw reports as artifacts
-      if: always()
-      uses: actions/upload-artifact@v4
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
       with:
-        name: security-reports
-        path: |
-          pip-audit.json
-          pip-audit.sarif
-
-    - name: Upload pip-audit SARIF to GitHub
-      uses: github/codeql-action/upload-sarif@v3
-      with:
-        sarif_file: pip-audit.sarif
+        category: "/language:${{matrix.language}}"
 
 #    - name: Python type checking
 #      run: mypy .
