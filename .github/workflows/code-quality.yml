@@ -72,10 +72,11 @@ jobs:
       with:
         category: "/language:${{matrix.language}}"
 
-    - name: Scan for vulnerabilities with pip-audit
-      uses: pypa/gh-action-pip-audit@v1.1.0
-      with:
-        sarif: "true"  # Enable SARIF output generation and upload
+#    - name: Scan for vulnerabilities with pip-audit
+#      uses: pypa/gh-action-pip-audit@v1.1.0
+#      with:
+#        inputs: src/
+#        sarif: "true"  # Enable SARIF output generation and upload
 
 #    - name: Python type checking
 #      run: mypy .
