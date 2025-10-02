@@ -73,9 +73,9 @@ jobs:
         category: "/language:${{matrix.language}}"
 
     - name: Scan for vulnerabilities with pip-audit
-      uses: TrailOfBits/gh-action-pip-audit@v1
+      uses: pypa/gh-action-pip-audit@v1.1.0
       with:
-        sarif: true # This ensures SARIF output is generated and uploaded
+        sarif: "true"  # Enable SARIF output generation and upload
 
 #    - name: Python type checking
 #      run: mypy .
