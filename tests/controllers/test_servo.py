@@ -101,7 +101,9 @@ class TestServoCtrlThread(unittest.TestCase):
 
     def assert_angle_reached(self, expected):
         try:
-            self.assertEqual(False, self.svc._ServoCtrlThread__flag.is_set()) # pylint: disable=protected-access
+            self.assertEqual(
+                False, self.svc._ServoCtrlThread__flag.is_set()
+            )  # pylint: disable=protected-access
             self.assertEqual(expected, self.svc.angle_current_value)
             self.assertEqual(expected, self.fake_servo.angle)
             return True
@@ -110,7 +112,9 @@ class TestServoCtrlThread(unittest.TestCase):
 
     def assert_angle_not_reached(self, not_expected):
         try:
-            self.assertEqual(False, self.svc._ServoCtrlThread__flag.is_set()) # pylint: disable=protected-access
+            self.assertEqual(
+                False, self.svc._ServoCtrlThread__flag.is_set()
+            )  # pylint: disable=protected-access
             self.assertNotEqual(not_expected, self.svc.angle_current_value)
             self.assertNotEqual(not_expected, self.fake_servo.angle)
             return True

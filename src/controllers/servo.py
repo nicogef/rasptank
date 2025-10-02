@@ -8,7 +8,9 @@ ANTICLOCKWISE = -1
 
 class ServoCtrlThread(threading.Thread):
 
-    def __init__(self, name, controller, channel_number, position, *, direction=CLOCKWISE):
+    def __init__(
+        self, name, controller, channel_number, position, *, direction=CLOCKWISE
+    ):
 
         self.__name = name
         self.__servo = controller.servo(channel_number)
@@ -83,7 +85,7 @@ class ServoCtrlThread(threading.Thread):
                     0,
                 )
             )
-        #print(f'-> {self.__name} move to {self.angle_target_value} from {self.angle_current_value} '
+        # print(f'-> {self.__name} move to {self.angle_target_value} from {self.angle_current_value} '
         #      f'at speed {self.servo_speed} direction {self.move_direction}')
         self.resume()
 

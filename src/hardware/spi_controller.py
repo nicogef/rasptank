@@ -1,4 +1,4 @@
-import spidev # pylint: disable=import-error
+import spidev  # pylint: disable=import-error
 import numpy
 
 
