@@ -8,7 +8,7 @@ ANTICLOCKWISE = -1
 
 class ServoCtrlThread(threading.Thread):
 
-    def __init__(self, name, controller, channel_number, position, direction):
+    def __init__(self, name, controller, channel_number, position, *, direction=CLOCKWISE):
 
         self.__name = name
         self.__servo = controller.servo(channel_number)
@@ -83,7 +83,8 @@ class ServoCtrlThread(threading.Thread):
                     0,
                 )
             )
-        # print(f'-> {self.__name} move to {self.angle_target_value} from {self.angle_current_value} at speed {self.servo_speed} direction {self.move_direction}')
+        #print(f'-> {self.__name} move to {self.angle_target_value} from {self.angle_current_value} '
+        #      f'at speed {self.servo_speed} direction {self.move_direction}')
         self.resume()
 
     def __next_step(self):
@@ -98,11 +99,11 @@ class ServoCtrlThread(threading.Thread):
     ##################################
     ########## SERVO PWM    ##########
     ##################################
-    def incrementPwm(self):
+    def increment_pwm(self):
         self.angle_target_value = self.angle_current_value + 1
         self.__set_angle(self.angle_target_value)
 
-    def derementPwm(self):
+    def derement_pwm(self):
         self.angle_target_value = self.angle_current_value - 1
         self.__set_angle(self.angle_target_value)
 
@@ -126,12 +127,12 @@ class ServoCtrlThread(threading.Thread):
             # print(f'{time.time()} -> {self.__name} pause as angle reached Target {angle}')
             self.pause()
             return self.angle_target_value
-        elif angle > self.angle_maximum_range:
+        if angle > self.angle_maximum_range:
             # print(f'{time.time()} -> {self.__name} pause as angle reached Max Angle {angle}')
             self.pause()
             self.angle_target_value = self.angle_maximum_range
             return self.angle_maximum_range
-        elif angle < self.angle_minimum_range:
+        if angle < self.angle_minimum_range:
             # print(f'{time.time()} -> {self.__name} pause as angle reached Min Angle {angle}')
             self.pause()
             self.angle_target_value = self.angle_minimum_range
@@ -145,7 +146,6 @@ class ServoCtrlThread(threading.Thread):
         while self._running:
             self.__flag.wait()
             self.__next_step()
-            pass
 
     def pause(self):
         print(f"{time.time()} -> pause {self.__name}")

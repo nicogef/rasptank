@@ -19,7 +19,7 @@ class Movement:
         self.__motor1.throttle = self.__motor1_direction * REVERSE * self.__speed
         self.__motor2.throttle = self.__motor2_direction * REVERSE * self.__speed
 
-    def left(self, angle=90):
+    def left(self):
         self.__motor1.throttle = self.__motor1_direction * self.__speed
         self.__motor2.throttle = self.__motor2_direction * REVERSE * self.__speed
 

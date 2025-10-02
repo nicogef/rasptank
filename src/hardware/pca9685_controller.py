@@ -1,7 +1,7 @@
-from board import SCL, SDA
-import busio
-from adafruit_pca9685 import PCA9685
-from adafruit_motor import motor
+from board import SCL, SDA # pylint: disable=import-error
+import busio # pylint: disable=import-error
+from adafruit_pca9685 import PCA9685 # pylint: disable=import-error
+from adafruit_motor import motor, servo # pylint: disable=import-error
 
 SERVO_1 = 0
 SERVO_2 = 1
@@ -31,7 +31,7 @@ class PCA9685Controller:
         #  pwm_motor.channels[7].duty_cycle = 0xFFFF
         self.pca_9685 = PCA9685(i2c, address=0x5F)  # default 0x40
         self.pca_9685.frequency = FREQ
-        self.__channels = self.pca_9685.__channels
+        self.__channels = self.pca_9685.__channels # pylint: disable=protected-access
 
     def motor(self, motor_index):
 

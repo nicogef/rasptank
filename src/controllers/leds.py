@@ -24,12 +24,13 @@ PREDEFINED_COLORS = {
 
 class LedCtrl(threading.Thread):
     def __init__(
-        self,
-        spi,
-        count=8,
-        default_brightness=255,
-        sequence="GRB",
-        default_color=PREDEFINED_COLORS["black"],
+            self,
+            spi,
+            *,
+            count=8,
+            default_brightness=255,
+            sequence="GRB",
+            default_color=PREDEFINED_COLORS["black"],
     ):
 
         # validate spi state
@@ -115,4 +116,3 @@ class LedCtrl(threading.Thread):
         while 1:
             self.__flag.wait()
             # self.lightChange()
-            pass

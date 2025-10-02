@@ -1,8 +1,7 @@
-# File: tests/test_motors.py
 import unittest
 from unittest.mock import MagicMock
 
-from src.controllers.motors import Movement, FORWARD, REVERSE
+from src.controllers.motors import Movement, FORWARD
 
 
 class SimpleMotor:

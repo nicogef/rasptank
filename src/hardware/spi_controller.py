@@ -1,4 +1,4 @@
-import spidev
+import spidev # pylint: disable=import-error
 import numpy
 
 
@@ -20,11 +20,13 @@ class SpiController:
                     "You can turn on the 'SPI' in 'Interface Options' by using 'sudo raspi-config'."
                 )
                 print(
-                    "Or make sure that 'dtparam=spi=on' is not commented, then reboot the Raspberry Pi. Otherwise spi0 will not be available."
+                    "Or make sure that 'dtparam=spi=on' is not commented, then reboot the Raspberry Pi. "
+                    "Otherwise spi0 will not be available."
                 )
             else:
                 print(
-                    f"Please add 'dtoverlay=spi{self.bus}-2cs' at the bottom of the /boot/firmware/config.txt, then reboot the Raspberry Pi. otherwise spi{self.bus} will not be available."
+                    f"Please add 'dtoverlay=spi{self.bus}-2cs' at the bottom of the /boot/firmware/config.txt, "
+                    f"then reboot the Raspberry Pi. otherwise spi{self.bus} will not be available."
                 )
             self.close()
             raise e

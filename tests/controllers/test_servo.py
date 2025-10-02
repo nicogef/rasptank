@@ -1,5 +1,3 @@
-# python
-# File: tests/test_servo.py
 import unittest
 from unittest.mock import MagicMock
 
@@ -21,14 +19,11 @@ class TestServoCtrlThread(unittest.TestCase):
         controller.servo = lambda ch: self.fake_servo
 
         # instantiate while thread start is patched
-        self.svc = ServoCtrlThread("test", controller, 0, 90, 1)
+        self.svc = ServoCtrlThread("test", controller, 0, 90)
 
     def tearDown(self):
-        try:
-            if self.svc.is_alive():
-                self.svc.stop_thread()
-        except Exception:
-            pass
+        if self.svc.is_alive():
+            self.svc.stop_thread()
 
     def test_initial_angle_set(self):
         self.svc.reset()
@@ -65,11 +60,11 @@ class TestServoCtrlThread(unittest.TestCase):
 
     def test_increment_and_decrement_pwm(self):
         # start from 90 by default
-        self.svc.incrementPwm()
+        self.svc.increment_pwm()
         self.assertEqual(91, self.fake_servo.angle)
-        self.svc.incrementPwm()
+        self.svc.increment_pwm()
         self.assertEqual(92, self.fake_servo.angle)
-        self.svc.derementPwm()
+        self.svc.derement_pwm()
         self.assertEqual(91, self.fake_servo.angle)
 
     def test_clockwise(self):
@@ -106,18 +101,18 @@ class TestServoCtrlThread(unittest.TestCase):
 
     def assert_angle_reached(self, expected):
         try:
-            self.assertEqual(False, self.svc._ServoCtrlThread__flag.is_set())
+            self.assertEqual(False, self.svc._ServoCtrlThread__flag.is_set()) # pylint: disable=protected-access
             self.assertEqual(expected, self.svc.angle_current_value)
             self.assertEqual(expected, self.fake_servo.angle)
             return True
         except AssertionError:
             return False
 
-    def assert_angle_not_reached(self, notExpected):
+    def assert_angle_not_reached(self, not_expected):
         try:
-            self.assertEqual(False, self.svc._ServoCtrlThread__flag.is_set())
-            self.assertNotEqual(notExpected, self.svc.angle_current_value)
-            self.assertNotEqual(notExpected, self.fake_servo.angle)
+            self.assertEqual(False, self.svc._ServoCtrlThread__flag.is_set()) # pylint: disable=protected-access
+            self.assertNotEqual(not_expected, self.svc.angle_current_value)
+            self.assertNotEqual(not_expected, self.fake_servo.angle)
             return True
         except AssertionError:
             return False

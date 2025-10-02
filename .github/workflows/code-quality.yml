@@ -51,7 +51,7 @@ jobs:
         # ini_path: # optional, default is DEFAULT
 
     - name: lint code (pylint)
-      run: pylint $(git ls-files '*.py')
+      run: pylint --rcfile=.pylintrc .
 
     - name: Run pip-audit
       run: |
