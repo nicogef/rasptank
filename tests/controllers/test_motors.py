@@ -49,10 +49,10 @@ class TestMovement(unittest.TestCase):
         self.assertEqual(0, self.m2.throttle)
 
     def test_speed_clamping(self):
-        self.movement.speed(150)
+        self.movement.set_speed(150)
         self.movement.forward()
         self.assertEqual(100, self.m1.throttle)
-        self.movement.speed(-10)
+        self.movement.set_speed(-10)
         self.movement.forward()
         self.assertEqual(0, self.m1.throttle)
 

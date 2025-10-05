@@ -37,3 +37,8 @@ Adeept is committed to assist customers in their education of robotics, programm
 ## Copyright
 
 Adeept brand and logo are copyright of Shenzhen Adeept Technology Co., Ltd. and cannot be used without written permission.
+
+
+## Project Requirements
+
+For a concise, product‑oriented overview of what the RaspTank should do and how it should behave, see REQUIREMENTS.md.

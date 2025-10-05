@@ -4,12 +4,12 @@ REVERSE = -1
 
 class Movement:
 
-    def __init__(self, controller, motor1_direction, motor2_direction):
+    def __init__(self, controller, motor1_direction, motor2_direction, *, speed = 100):
         self.__motor1 = controller.motor(1)
         self.__motor1_direction = motor1_direction
         self.__motor2 = controller.motor(2)
         self.__motor2_direction = motor2_direction
-        self.__speed = 100
+        self.__speed = speed
 
     def forward(self):
         self.__motor1.throttle = self.__motor1_direction * self.__speed
@@ -31,7 +31,7 @@ class Movement:
         self.__motor1.throttle = 0
         self.__motor2.throttle = 0
 
-    def speed(self, speed):
+    def set_speed(self, speed):
         if speed > 100:
             speed = 100
         elif speed < 0:

@@ -1,4 +1,9 @@
 name: CI/CD Pipeline
+# Black -> Check formatting
+# Pylint -> Linting
+# Pytest -> Unit tests + Coverage
+# Codecov -> Coverage reporting
+# pip-audit -> Dependency vulnerability scan
 
 on:
   push:
@@ -10,38 +15,80 @@ on:
 jobs:
   python-tests:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
+      fail-fast: false
       matrix:
-        python-version: [3.13]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
 
     steps:
     - uses: actions/checkout@v4
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+        cache-dependency-path: |
+          requirements.txt
+          pyproject.toml
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pytest pytest-cov black
+        pip install pytest pytest-cov black pylint pytest-timeout
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
     - name: Format check with black
       run: black --check .
 
+    - name: Lint code (pylint)
+      run: |
+        if [ -f .pylintrc ]; then pylint --rcfile=.pylintrc .; else pylint .; fi
+
     - name: Test with pytest
-      run: pytest --cov=src --junitxml=junit.xml --cov-report=xml:coverage.xml
+      run: pytest
+
+
+    - name: Upload test report artifact
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: junit-${{ matrix.python-version }}
+        path: junit.xml
+
+    - name: Upload coverage artifact
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-${{ matrix.python-version }}
+        path: coverage.xml
 
     - name: Upload test results to Codecov
       if: ${{ !cancelled() }}
       uses: codecov/test-results-action@v1
+      timeout-minutes: 3
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v5
+      timeout-minutes: 3
       with:
         files: ./coverage.xml
         token: ${{ secrets.CODECOV_TOKEN }}
+
+    - name: Run pip-audit (dependency vulnerabilities)
+      if: always() && matrix.python-version == '3.11'
+      uses: pypa/gh-action-pip-audit@v1.1.0
+      timeout-minutes: 5
+      with:
+        inputs: |
+          -r requirements.txt
+        # Generate SARIF and upload as artifact for GitHub Security tab
+        # Note: keep workflow non-blocking initially
+        # Set 'fail-on-vuln: true' to enforce blocking in future
+        # see: https://github.com/pypa/gh-action-pip-audit
+        # sarif: true
+      continue-on-error: true

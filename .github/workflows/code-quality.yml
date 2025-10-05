@@ -1,4 +1,12 @@
 name: Code Quality
+# Bandit ->  Finds common security issues in Python code, such as:
+#              - insecure imports,
+#              - hardcoded passwords,
+#              - unsafe function usage
+# CodeQL  ->  Performs deep semantic analysis to identify potential vulnerabilities in codebases
+# next?
+# - pip-audit -> Checks Python environments and dependency files for known vulnerabilities
+# - mypy -> Static type checking for Python
 
 on:
   push:
@@ -12,8 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read # for actions/checkout to fetch code
-      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
-      actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
+      security-events: write # for codeql-action & bandit to upload SARIF results
+      actions: read # only required for a private repository, for codeql-action (upload) to get the Action run status
       packages: read # required to fetch internal or private CodeQL packs
     strategy:
       fail-fast: false
@@ -33,7 +41,7 @@ jobs:
 
     - name: Install Python dependencies
       run: |
-        pip install bandit pip-audit pylint numpy
+        pip install bandit pip-audit numpy
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
     - name: Python security check (Bandit)
@@ -47,9 +55,6 @@ jobs:
         excluded_paths: web/ # comma-separated list of paths (glob patterns supported)
         # skips: comma-separated list of test IDs to skip
         # ini_path: .bandit file that supplies command line arguments
-
-    - name: lint code (pylint)
-      run: pylint --rcfile=.pylintrc .
 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
@@ -72,11 +77,15 @@ jobs:
       with:
         category: "/language:${{matrix.language}}"
 
-#    - name: Scan for vulnerabilities with pip-audit
-#      uses: pypa/gh-action-pip-audit@v1.1.0
-#      with:
-#        inputs: src/
-#        sarif: "true"  # Enable SARIF output generation and upload
+    - name: Scan for vulnerabilities with pip-audit
+      uses: pypa/gh-action-pip-audit@v1.1.0
+      with:
+        inputs: |
+          -r requirements.txt
+        no-deps: true
+        # Enable SARIF upload to the Security tab
+        sarif: true
+      continue-on-error: true
 
 #    - name: Python type checking
 #      run: mypy .
