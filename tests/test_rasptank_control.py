@@ -1,38 +1,40 @@
 # python
 import unittest
 from unittest.mock import Mock, AsyncMock, patch
-import sys, os, json
+import sys
+import os
+import json
 import asyncio
 
 # Ensure project root on path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 # Mock hardware dependencies BEFORE importing module
-sys.modules['src.hardware.pca9685_controller'] = Mock()
-sys.modules['src.hardware.spi_controller'] = Mock()
-sys.modules['src.controllers.servo'] = Mock()
-sys.modules['src.controllers.motors'] = Mock()
-sys.modules['src.controllers.leds'] = Mock()
+sys.modules["src.hardware.pca9685_controller"] = Mock()
+sys.modules["src.hardware.spi_controller"] = Mock()
+sys.modules["src.controllers.servo"] = Mock()
+sys.modules["src.controllers.motors"] = Mock()
+sys.modules["src.controllers.leds"] = Mock()
 # sys.modules['src.system'] = Mock()
-sys.modules['app'] = Mock()
-sys.modules['websockets'] = Mock()
+sys.modules["app"] = Mock()
+sys.modules["websockets"] = Mock()
 
-from src import rasptank_controls
+from src import rasptank_controls  # pylint: disable=wrong-import-position
 
 
 def rebind_movement(mock_movement):
     rasptank_controls.MOVEMENT = mock_movement
-    rasptank_controls.controls.update({
-        'forward':  mock_movement.forward,
-        'backward': mock_movement.backward,
-        'left':     mock_movement.left,
-        'right':    mock_movement.right,
-        'DS':       mock_movement.stop,
-        'TS':       mock_movement.stop,
-    })
-    rasptank_controls.controls_with_1_args.update({
-        'wsB': mock_movement.set_speed
-    })
+    rasptank_controls.controls.update(
+        {
+            "forward": mock_movement.forward,
+            "backward": mock_movement.backward,
+            "left": mock_movement.left,
+            "right": mock_movement.right,
+            "DS": mock_movement.stop,
+            "TS": mock_movement.stop,
+        }
+    )
+    rasptank_controls.controls_with_1_args.update({"wsB": mock_movement.set_speed})
 
 
 def rebind_servos(arm, hand, wrist, claw, cam):
@@ -41,43 +43,49 @@ def rebind_servos(arm, hand, wrist, claw, cam):
     rasptank_controls.WRIST = wrist
     rasptank_controls.CLAW = claw
     rasptank_controls.CAMERA = cam
-    rasptank_controls.controls.update({
-        'armUp': arm.clockwise,
-        'armDown': arm.anticlockwise,
-        'armStop': arm.stop,
-        'handUp': hand.clockwise,
-        'handDown': hand.anticlockwise,
-        'handStop': hand.stop,
-        'lookleft': wrist.clockwise,
-        'lookright': wrist.anticlockwise,
-        'LRstop': wrist.stop,
-        'grab': claw.clockwise,
-        'loose': claw.anticlockwise,
-        'GLstop': claw.stop,
-        'up': cam.clockwise,
-        'down': cam.anticlockwise,
-        'UDstop': cam.stop,
-        'home': rasptank_controls.servoPosInit
-    })
+    rasptank_controls.controls.update(
+        {
+            "armUp": arm.clockwise,
+            "armDown": arm.anticlockwise,
+            "armStop": arm.stop,
+            "handUp": hand.clockwise,
+            "handDown": hand.anticlockwise,
+            "handStop": hand.stop,
+            "lookleft": wrist.clockwise,
+            "lookright": wrist.anticlockwise,
+            "LRstop": wrist.stop,
+            "grab": claw.clockwise,
+            "loose": claw.anticlockwise,
+            "GLstop": claw.stop,
+            "up": cam.clockwise,
+            "down": cam.anticlockwise,
+            "UDstop": cam.stop,
+            "home": rasptank_controls.servoPosInit,
+        }
+    )
 
 
 class TestResponses(unittest.TestCase):
     def test_success(self):
         self.assertEqual(
             rasptank_controls.success("cmd", 123),
-            {'status': 'ok', 'title': 'cmd', 'data': 123}
+            {"status": "ok", "title": "cmd", "data": 123},
         )
 
     def test_failed(self):
         self.assertEqual(
             rasptank_controls.failed("cmd", "err"),
-            {'status': 'nok', 'title': 'cmd', 'data': 'err'}
+            {"status": "nok", "title": "cmd", "data": "err"},
         )
 
 
 class TestServoInit(unittest.TestCase):
     def test_servo_pos_init(self):
-        arm = Mock(); hand = Mock(); wrist = Mock(); claw = Mock(); cam = Mock()
+        arm = Mock()
+        hand = Mock()
+        wrist = Mock()
+        claw = Mock()
+        cam = Mock()
         rebind_servos(arm, hand, wrist, claw, cam)
         rasptank_controls.servoPosInit()
         arm.reset.assert_called_once()
@@ -89,24 +97,27 @@ class TestServoInit(unittest.TestCase):
 
 class TestServoControls(unittest.TestCase):
     def setUp(self):
-        self.arm = Mock(); self.hand = Mock()
-        self.wrist = Mock(); self.claw = Mock(); self.cam = Mock()
+        self.arm = Mock()
+        self.hand = Mock()
+        self.wrist = Mock()
+        self.claw = Mock()
+        self.cam = Mock()
         rebind_servos(self.arm, self.hand, self.wrist, self.claw, self.cam)
 
     def test_arm_controls(self):
-        rasptank_controls.controls['armUp']()
+        rasptank_controls.controls["armUp"]()
         self.arm.clockwise.assert_called_once()
-        rasptank_controls.controls['armDown']()
+        rasptank_controls.controls["armDown"]()
         self.arm.anticlockwise.assert_called_once()
-        rasptank_controls.controls['armStop']()
+        rasptank_controls.controls["armStop"]()
         self.arm.stop.assert_called_once()
 
     def test_wrist_controls(self):
-        rasptank_controls.controls['lookleft']()
+        rasptank_controls.controls["lookleft"]()
         self.wrist.clockwise.assert_called_once()
-        rasptank_controls.controls['lookright']()
+        rasptank_controls.controls["lookright"]()
         self.wrist.anticlockwise.assert_called_once()
-        rasptank_controls.controls['LRstop']()
+        rasptank_controls.controls["LRstop"]()
         self.wrist.stop.assert_called_once()
 
 
@@ -116,23 +127,23 @@ class TestMovementControls(unittest.TestCase):
         rebind_movement(self.movement)
 
     def test_moves(self):
-        rasptank_controls.controls['forward']()
+        rasptank_controls.controls["forward"]()
         self.movement.forward.assert_called_once()
-        rasptank_controls.controls['backward']()
+        rasptank_controls.controls["backward"]()
         self.movement.backward.assert_called_once()
-        rasptank_controls.controls['left']()
+        rasptank_controls.controls["left"]()
         self.movement.left.assert_called_once()
-        rasptank_controls.controls['right']()
+        rasptank_controls.controls["right"]()
         self.movement.right.assert_called_once()
 
     def test_stops(self):
-        rasptank_controls.controls['DS']()
+        rasptank_controls.controls["DS"]()
         self.movement.stop.assert_called_once()
-        rasptank_controls.controls['TS']()
+        rasptank_controls.controls["TS"]()
         self.assertEqual(self.movement.stop.call_count, 2)
 
     def test_set_speed_arg_command(self):
-        rasptank_controls.controls_with_1_args['wsB'](60)
+        rasptank_controls.controls_with_1_args["wsB"](60)
         self.movement.set_speed.assert_called_once_with(60)
 
 
@@ -141,23 +152,24 @@ class TestWifiCheck(unittest.TestCase):
         # Inject mock socket (module lacks import)
         mock_socket_mod = Mock()
         mock_sock = Mock()
-        mock_sock.getsockname.return_value = ['10.0.0.2']
+        mock_sock.getsockname.return_value = ["10.0.0.2"]
         mock_socket_mod.socket.return_value = mock_sock
         rasptank_controls.socket = mock_socket_mod
         rasptank_controls.wifi_check()
         mock_socket_mod.socket.assert_called_once()
 
+
 class TestGetInfo(unittest.TestCase):
     def setUp(self):
         # Patch system.get_info then rebind controls entry
-        self.get_info_mock = Mock(return_value={'version': '1.0', 'ok': True})
+        self.get_info_mock = Mock(return_value={"version": "1.0", "ok": True})
         rasptank_controls.system.get_info = self.get_info_mock
-        rasptank_controls.controls['get_info'] = rasptank_controls.system.get_info
+        rasptank_controls.controls["get_info"] = rasptank_controls.system.get_info
 
     def test_get_info_control_mapping(self):
-        result = rasptank_controls.controls['get_info']()
+        result = rasptank_controls.controls["get_info"]()
         self.get_info_mock.assert_called_once()
-        self.assertEqual(result, {'version': '1.0', 'ok': True})
+        self.assertEqual(result, {"version": "1.0", "ok": True})
 
 
 class TestAsyncFlow(unittest.IsolatedAsyncioTestCase):
@@ -185,8 +197,8 @@ class TestAsyncFlow(unittest.IsolatedAsyncioTestCase):
             await rasptank_controls.recv_msg(ws)
         movement.forward.assert_called_once()
         sent = json.loads(ws.send.call_args_list[0].args[0])
-        self.assertEqual(sent['title'], 'forward')
-        self.assertEqual(sent['status'], 'ok')
+        self.assertEqual(sent["title"], "forward")
+        self.assertEqual(sent["status"], "ok")
 
     async def test_recv_msg_invalid(self):
         ws = AsyncMock()
@@ -194,7 +206,7 @@ class TestAsyncFlow(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(asyncio.CancelledError):
             await rasptank_controls.recv_msg(ws)
         sent = json.loads(ws.send.call_args_list[0].args[0])
-        self.assertEqual(sent['status'], 'nok')
+        self.assertEqual(sent["status"], "nok")
 
     async def test_recv_msg_missing_arg(self):
         ws = AsyncMock()
@@ -204,30 +216,28 @@ class TestAsyncFlow(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(asyncio.CancelledError):
             await rasptank_controls.recv_msg(ws)
         sent = json.loads(ws.send.call_args_list[0].args[0])
-        self.assertEqual(sent['status'], 'nok')
-        self.assertIn("Need 1 argument", sent['data'])
+        self.assertEqual(sent["status"], "nok")
+        self.assertIn("Need 1 argument", sent["data"])
 
     async def test_recv_msg_get_info(self):
         # Prepare websocket returning the command then raising to exit loop
         ws = AsyncMock()
         ws.recv.side_effect = ["get_info", asyncio.CancelledError()]
         # Patch and rebind get_info
-        get_info_mock = Mock(return_value={'cpu': 'pct'})
+        get_info_mock = Mock(return_value={"cpu": "pct"})
         rasptank_controls.system.get_info = get_info_mock
-        rasptank_controls.controls['get_info'] = rasptank_controls.system.get_info
+        rasptank_controls.controls["get_info"] = rasptank_controls.system.get_info
         with self.assertRaises(asyncio.CancelledError):
             await rasptank_controls.recv_msg(ws)
         get_info_mock.assert_called_once()
         sent_payload = json.loads(ws.send.call_args_list[0].args[0])
-        self.assertEqual(sent_payload['status'], 'ok')
-        self.assertEqual(sent_payload['title'], 'get_info')
-        self.assertIn('Executed', sent_payload['data'])
+        self.assertEqual(sent_payload["status"], "ok")
+        self.assertEqual(sent_payload["title"], "get_info")
+        self.assertIn("Executed", sent_payload["data"])
 
 
-if __name__ == '__main__':
-    import asyncio
+if __name__ == "__main__":
     unittest.main(verbosity=2)
-
 
 
 class TestAdditionalAsyncFlows(unittest.IsolatedAsyncioTestCase):
@@ -258,15 +268,22 @@ class TestAdditionalAsyncFlows(unittest.IsolatedAsyncioTestCase):
 
     async def test_recv_msg_home_calls_servo_init(self):
         # Mock servos and ensure servoPosInit is invoked through command router
-        arm = Mock(); hand = Mock(); wrist = Mock(); claw = Mock(); cam = Mock()
+        arm = Mock()
+        hand = Mock()
+        wrist = Mock()
+        claw = Mock()
+        cam = Mock()
         rebind_servos(arm, hand, wrist, claw, cam)
         ws = AsyncMock()
         ws.recv.side_effect = ["home", asyncio.CancelledError()]
         with self.assertRaises(asyncio.CancelledError):
             await rasptank_controls.recv_msg(ws)
         # servoPosInit should have been called, which triggers reset on each servo
-        arm.reset.assert_called_once(); hand.reset.assert_called_once(); wrist.reset.assert_called_once()
-        claw.reset.assert_called_once(); cam.reset.assert_called_once()
+        arm.reset.assert_called_once()
+        hand.reset.assert_called_once()
+        wrist.reset.assert_called_once()
+        claw.reset.assert_called_once()
+        cam.reset.assert_called_once()
         payload = json.loads(ws.send.call_args_list[0].args[0])
         self.assertEqual(payload["status"], "ok")
         self.assertEqual(payload["title"], "home")
@@ -282,16 +299,18 @@ class TestWifiCheckAPBranch(unittest.TestCase):
 
         # Patch threading.Thread to a dummy that records calls
         class DummyThread:
-            def __init__(self, target=None, *args, **kwargs):
+            def __init__(
+                self, *args, target=None, **kwargs
+            ):  # pylint: disable=unused-argument
                 self.target = target
                 self.daemon = False
                 self.started = False
-            def setDaemon(self, daemonic=True):
-                self.daemon = daemonic
+
             def start(self):
                 # do not invoke target to avoid side effects
                 self.started = True
-        with patch.object(rasptank_controls, 'threading', Mock(Thread=DummyThread)):
+
+        with patch.object(rasptank_controls, "threading", Mock(Thread=DummyThread)):
             rasptank_controls.wifi_check()
             # ap_thread should not have been executed, only scheduled
             self.assertFalse(rasptank_controls.ap_thread.called)

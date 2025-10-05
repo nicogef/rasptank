@@ -6,7 +6,7 @@ CLOCKWISE = 1
 ANTICLOCKWISE = -1
 
 
-class ServoCtrlThread(threading.Thread):
+class ServoCtrlThread(threading.Thread):  # pylint: disable=too-many-instance-attributes
 
     def __init__(
         self, name, controller, channel_number, *, position=90, direction=CLOCKWISE
@@ -66,7 +66,8 @@ class ServoCtrlThread(threading.Thread):
         # Best-effort cleanup to avoid leaking non-daemon threads in tests
         try:
             self.stop_thread(timeout=0.5)
-        except Exception:
+        except RuntimeError:
+            # During interpreter shutdown, thread internals may raise RuntimeError; ignore in destructor
             pass
 
     def move_to(self, angle):

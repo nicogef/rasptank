@@ -55,7 +55,9 @@ class TestLedCtrl(unittest.TestCase):
 
     def test_per_led_color_and_brightness_mapping(self):
         spi = SpiMock()
-        ctrl = LedCtrl(spi, count=3, sequence="RGB", default_color=PREDEFINED_COLORS["black"])
+        ctrl = LedCtrl(
+            spi, count=3, sequence="RGB", default_color=PREDEFINED_COLORS["black"]
+        )
 
         # set LED0 -> (100, 0, 0), LED1 -> (0, 50, 0), LED2 -> (0, 0, 200)
         ctrl.set_one_led_color(0, (100, 0, 0))
