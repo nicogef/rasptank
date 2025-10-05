@@ -68,11 +68,7 @@ def step_test() -> int:
     # Options are centralized in pyproject.toml [tool.pytest.ini_options]
     # Add a hard timeout to prevent hangs (10 minutes)
     return run(
-        [
-            sys.executable,
-            "-m",
-            "pytest",
-        ],
+        [sys.executable, "-m", "pytest", "--cov=src", "--cov", "-report=html"],
         check=False,
         timeout=600,
     )

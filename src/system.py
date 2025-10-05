@@ -4,49 +4,46 @@
 # Website     : www.gewbot.com
 # Author      : Adeept
 # Date        : 2019/08/28
-import builtins as _builtins
-import os
+import builtins as _builtins  # keep as module to allow tests to patch builtins.open
+import subprocess
+import shutil
 import psutil
+
+
+def _read_cpu_temp_str(path: str = "/sys/class/thermal/thermal_zone0/temp") -> str:
+    """Read CPU temperature from sysfs and return a string rounded to 0.1°C.
+    Fails if the path does not exist or cannot be read. Tests can mock builtins.open.
+    """
+    with _builtins.open(path, "r", encoding="utf-8") as mytmpfile:
+        last_line = "0"
+        for line in mytmpfile:
+            last_line = line
+    cpu_temp = float(last_line) / 1000.0
+    return str(round(cpu_temp, 1))
 
 
 def get_info():
     """Return system info as a list of strings: [cpu_temp, cpu_use, ram_use].
-    Read the CPU temperature here directly so tests can observe the file open.
+    Fail if the CPU temperature path does not exist or cannot be read.
+    Tests can mock builtins.open to avoid filesystem dependencies.
     """
-    cpu_temp_str = "0.0"
-    try:
-        with _builtins.open(
-            "/sys/class/thermal/thermal_zone0/temp", "r", encoding="utf-8"
-        ) as mytmpfile:
-            last_line = "0"
-            for line in mytmpfile:
-                last_line = line
-        cpu_temp = float(last_line) / 1000.0
-        cpu_temp_str = str(round(cpu_temp, 1))
-    except (OSError, ValueError):
-        # In non-RPi environments this path may not exist; keep a safe default
-        cpu_temp_str = "0.0"
-
-    return [cpu_temp_str, get_cpu_use(), get_ram_info()]
+    return [get_cpu_tempfunc(), get_cpu_use(), get_ram_info()]
 
 
 def get_cpu_tempfunc():  # pragma: no cover
     """Return CPU temperature"""
-    result = 0
-    with open(
-        "/sys/class/thermal/thermal_zone0/temp", "r", encoding="utf-8"
-    ) as mytmpfile:
-        for line in mytmpfile:
-            result = line
-
-    result = float(result) / 1000
-    result = round(result, 1)
-    return str(result)
+    return _read_cpu_temp_str()
 
 
 def get_gpu_tempfunc():  # pragma: no cover
-    """Return GPU temperature as a character string"""
-    res = os.popen("/opt/vc/bin/vcgencmd measure_temp").readline()
+    """Return GPU temperature as a character string using vcgencmd.
+    Uses subprocess for robustness; errors propagate if the command is missing/fails.
+    """
+    cmd = shutil.which("vcgencmd") or "/opt/vc/bin/vcgencmd"
+    result = subprocess.run(
+        [cmd, "measure_temp"], check=True, capture_output=True, text=True
+    )
+    res = result.stdout.splitlines()[0] if result.stdout else ""
     return res.replace("temp=", "")
 
 
