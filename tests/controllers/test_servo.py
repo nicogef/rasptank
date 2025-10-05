@@ -19,7 +19,7 @@ class TestServoCtrlThread(unittest.TestCase):
         controller.servo = lambda ch: self.fake_servo
 
         # instantiate while thread start is patched
-        self.svc = ServoCtrlThread("test", controller, 0, 90)
+        self.svc = ServoCtrlThread("test", controller, 0)
 
     def tearDown(self):
         if self.svc.is_alive():

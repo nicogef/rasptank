@@ -22,3 +22,12 @@ exclude = '''
   | dist
 )/
 '''
+
+[tool.pytest.ini_options]
+addopts = [
+  "--cov=src",
+  "--junitxml=junit.xml",
+  "--cov-report=xml:coverage.xml",
+  "--cov-fail-under=90",
+]
+testpaths = ["tests"]

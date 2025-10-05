@@ -53,7 +53,8 @@ class LedCtrl(threading.Thread):
         self.led_count = count
         self.default_color = default_color
         self.default_brightness = default_brightness
-        self.led_color = self.default_color * self.led_count
+        # Store colors in a mutable list so we can update per LED
+        self.led_color = list(self.default_color) * self.led_count
         self.led_brightness = [self.default_brightness] * self.led_count
 
         # Init Complete show leds
@@ -61,6 +62,9 @@ class LedCtrl(threading.Thread):
 
         # initialize Thread
         super().__init__()
+        # Make the worker a daemon so it never blocks process exit in tests/CI
+        self.daemon = True
+        self._running = True
         self.__flag = threading.Event()
         self.__flag.clear()
         self.start()
@@ -74,12 +78,13 @@ class LedCtrl(threading.Thread):
             raise ValueError(
                 "Color must be a list of three integers representing RGB values."
             )
-        self.led_color = color * self.led_count
+        # Ensure we store a mutable list for per-LED updates later
+        self.led_color = list(color) * self.led_count
         self.show()
 
     def reset(self):
         self.led_brightness = [self.default_brightness] * self.led_count
-        self.led_color = self.default_color * self.led_count
+        self.led_color = list(self.default_color) * self.led_count
         self.show()
 
     def set_one_led_color(self, led, color):
@@ -98,8 +103,31 @@ class LedCtrl(threading.Thread):
         self.spi.write(led_command)
 
     def stop(self):
-        self.reset()
-        self.spi.close()
+        # Turn off LEDs and stop background thread, then close SPI
+        try:
+            self.pause()
+        finally:
+            try:
+                self.stop_thread(timeout=0.5)
+            finally:
+                self.spi.close()
+
+    def stop_thread(self, timeout: float = 1.0):
+        """Signal the worker to stop and wait briefly for it to terminate."""
+        try:
+            self._running = False
+            # Wake the thread if it's waiting so it can exit
+            self.__flag.set()
+            if self.is_alive():
+                self.join(timeout)
+        except Exception:
+            pass
+
+    def __del__(self):  # pragma: no cover
+        try:
+            self.stop_thread(timeout=0.2)
+        except Exception:
+            pass
 
     ##################################
     ####### Thread Management ########
@@ -113,6 +141,6 @@ class LedCtrl(threading.Thread):
         self.__flag.clear()
 
     def run(self):
-        while 1:
+        while getattr(self, "_running", False):
             self.__flag.wait()
             # self.lightChange()
