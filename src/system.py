@@ -16,8 +16,8 @@ def get_info():
     cpu_temp_str = "0.0"
     try:
         with _builtins.open(
-            "/sys/class/thermal/thermal_zone0/temp", "r"
-        ) as mytmpfile:  # pylint: disable=unspecified-encoding
+            "/sys/class/thermal/thermal_zone0/temp", "r", encoding="utf-8"
+        ) as mytmpfile:
             last_line = "0"
             for line in mytmpfile:
                 last_line = line
