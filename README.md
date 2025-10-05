@@ -37,3 +37,36 @@ Adeept is committed to assist customers in their education of robotics, programm
 ## Copyright
 
 Adeept brand and logo are copyright of Shenzhen Adeept Technology Co., Ltd. and cannot be used without written permission.
+
+
+## Project Requirements
+
+For a concise, product‑oriented overview of what the RaspTank should do and how it should behave, see REQUIREMENTS.md.
+
+
+## Run the full CI locally
+
+You can run the same checks locally that our GitHub Actions CI runs (format, lint, tests with coverage, and dependency audit).
+
+Prerequisites:
+- Python 3.13 (to match CI) or a compatible Python 3.x
+- A virtual environment is recommended
+- Install dependencies and dev tools:
+  - pip install -r requirements.txt
+  - pip install black pylint pytest pytest-cov pip-audit
+
+Run all CI steps:
+- python -m scripts.ci all
+
+Run individual steps:
+- Format check (Black): python -m scripts.ci format
+- Lint (Pylint):       python -m scripts.ci lint
+- Tests + coverage:    python -m scripts.ci test
+- Vulnerability audit: python -m scripts.ci audit
+
+Outputs (after running tests):
+- junit.xml and coverage.xml are written to the repository root (configured via pyproject.toml), same as the CI artifacts.
+
+Notes:
+- If any tool is missing, the script will let you know what to install.
+- The audit step uses pip-audit and checks requirements.txt when present, otherwise the current environment.

@@ -1,0 +1,20 @@
+# Core runtime dependencies
+psutil
+numpy
+websockets
+
+# Hardware-specific (Raspberry Pi) dependencies
+# Install only on Raspberry Pi (Linux on ARMv7 or AArch64)
+spidev; platform_system == "Linux" and (platform_machine == "armv7l" or platform_machine == "aarch64")
+adafruit-blinka; platform_system == "Linux" and (platform_machine == "armv7l" or platform_machine == "aarch64")
+adafruit-circuitpython-pca9685; platform_system == "Linux" and (platform_machine == "armv7l" or platform_machine == "aarch64")
+adafruit-circuitpython-motor; platform_system == "Linux" and (platform_machine == "armv7l" or platform_machine == "aarch64")
+
+# Test utilities (used by CI and local runs)
+pytest-timeout
+
+# Optional: Web/Camera features
+# Note: These are optional and may be installed only on Raspberry Pi with camera support.
+# opencv-python
+# imutils
+# picamera2 and libcamera are installed via Raspberry Pi OS packages (not PyPI)

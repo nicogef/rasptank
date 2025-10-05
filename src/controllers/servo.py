@@ -6,10 +6,10 @@ CLOCKWISE = 1
 ANTICLOCKWISE = -1
 
 
-class ServoCtrlThread(threading.Thread):
+class ServoCtrlThread(threading.Thread):  # pylint: disable=too-many-instance-attributes
 
     def __init__(
-        self, name, controller, channel_number, position, *, direction=CLOCKWISE
+        self, name, controller, channel_number, *, position=90, direction=CLOCKWISE
     ):
 
         self.__name = name
@@ -33,6 +33,8 @@ class ServoCtrlThread(threading.Thread):
 
         self._running = True
         super().__init__()
+        # Make the worker thread a daemon so it never blocks process exit in tests
+        self.daemon = True
         self.__flag = threading.Event()
         self.__flag.clear()
         self.start()
@@ -59,6 +61,14 @@ class ServoCtrlThread(threading.Thread):
         # Wake the thread if it is waiting on the flag
         self.__flag.set()
         self.join(timeout)
+
+    def __del__(self):
+        # Best-effort cleanup to avoid leaking non-daemon threads in tests
+        try:
+            self.stop_thread(timeout=0.5)
+        except RuntimeError:
+            # During interpreter shutdown, thread internals may raise RuntimeError; ignore in destructor
+            pass
 
     def move_to(self, angle):
         self.move(angle=angle)
