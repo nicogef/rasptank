@@ -20,7 +20,9 @@ class TestSystemGetInfo(unittest.TestCase):
         # mocked_open = iterable_mock_open("45000\n")
         # with patch('builtins.open', mocked_open):
         info = system.get_info()
-        expected_call = call("/sys/class/thermal/thermal_zone0/temp", "r", encoding='utf-8')
+        expected_call = call(
+            "/sys/class/thermal/thermal_zone0/temp", "r", encoding="utf-8"
+        )
         self.assertIn(expected_call, mocked_open.call_args_list)
 
         self.assertIsInstance(info, list)
