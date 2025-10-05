@@ -15,8 +15,10 @@ def iterable_mock_open(read_data):
 
 class TestSystemGetInfo(unittest.TestCase):
 
+    @patch("src.system.psutil.cpu_percent", return_value=12.5)
+    @patch("src.system.psutil.virtual_memory", return_value=[0, 0, 33])
     @patch("builtins.open", new_callable=iterable_mock_open, read_data="45000\n")
-    def test_get_info_returns_serializable_dict(self, mocked_open):
+    def test_get_info_returns_serializable_dict(self, mocked_open, _mock_virtual_memory, _mock_cpu_percent):
         # mocked_open = iterable_mock_open("45000\n")
         # with patch('builtins.open', mocked_open):
         info = system.get_info()
