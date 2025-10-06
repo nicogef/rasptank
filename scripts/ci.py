@@ -42,9 +42,7 @@ def run(cmd: list[str] | str, check: bool = True, timeout: float | None = None) 
 def ensure_tool(name: str) -> None:
     if shutil.which(name) is None:
         print(f"ERROR: Required tool '{name}' not found on PATH. Please install it.")
-        print(
-            "       For example: pip install black pylint pytest pytest-cov pip-audit"
-        )
+        print("       For example: pip install black pylint pytest pytest-cov pip-audit")
         sys.exit(1)
 
 
@@ -57,9 +55,7 @@ def step_lint() -> int:
     ensure_tool("pylint")
     rcfile = ".pylintrc"
     if (REPO_ROOT / rcfile).exists():
-        return run(
-            [sys.executable, "-m", "pylint", f"--rcfile={rcfile}", "."], check=False
-        )
+        return run([sys.executable, "-m", "pylint", f"--rcfile={rcfile}", "."], check=False)
     return run([sys.executable, "-m", "pylint", "."], check=False)
 
 
@@ -68,7 +64,7 @@ def step_test() -> int:
     # Options are centralized in pyproject.toml [tool.pytest.ini_options]
     # Add a hard timeout to prevent hangs (10 minutes)
     return run(
-        [sys.executable, "-m", "pytest", "--cov=src", "--cov", "-report=html"],
+        [sys.executable, "-m", "pytest", "--cov=src", "--cov", "--cov-report=html"],
         check=False,
         timeout=600,
     )
@@ -84,9 +80,7 @@ def step_audit() -> int:
             timeout=180,
         )
     # Fallback: audit current environment
-    return run(
-        [sys.executable, "-m", "pip_audit", "--timeout", "60"], check=False, timeout=180
-    )
+    return run([sys.executable, "-m", "pip_audit", "--timeout", "60"], check=False, timeout=180)
 
 
 def step_all() -> int:
