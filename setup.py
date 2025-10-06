@@ -6,12 +6,8 @@
 import os
 import time
 
-username = (
-    os.popen("echo ${SUDO_USER:-$(who -m | awk '{ print $1 }')}").readline().strip()
-)  # pi
-user_home = (
-    os.popen("getent passwd %s | cut -d: -f 6" % username).readline().strip()
-)  # home
+username = os.popen("echo ${SUDO_USER:-$(who -m | awk '{ print $1 }')}").readline().strip()  # pi
+user_home = os.popen("getent passwd %s | cut -d: -f 6" % username).readline().strip()  # home
 
 curpath = os.path.realpath(__file__)
 thisPath = "/" + os.path.dirname(curpath)
@@ -34,9 +30,7 @@ def replace_num(file, initial, new_num):
 def run_command(cmd=""):
     import subprocess
 
-    p = subprocess.Popen(
-        cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
-    )
+    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     result = p.stdout.read().decode("utf-8")
     status = p.poll()
     return status, result
@@ -162,9 +156,7 @@ for x in range(3):
 
 
 try:
-    replace_num(
-        "/boot/config.txt", "#dtparam=i2c_arm=on", "dtparam=i2c_arm=on\nstart_x=1\n"
-    )
+    replace_num("/boot/config.txt", "#dtparam=i2c_arm=on", "dtparam=i2c_arm=on\nstart_x=1\n")
 except:
     print("Error updating boot config to enable i2c. Please try again.")
 
@@ -173,9 +165,7 @@ try:
     os.system("sudo touch /" + user_home + "/startup.sh")
     with open("/" + user_home + "/startup.sh", "w") as file_to_write:
         # you can choose how to control the robot
-        file_to_write.write(
-            "#!/bin/sh\nsleep 5\nsudo python3 " + thisPath + "/web/webServer.py"
-        )
+        file_to_write.write("#!/bin/sh\nsleep 5\nsudo python3 " + thisPath + "/web/webServer.py")
 except:
     pass
 
@@ -191,9 +181,7 @@ if not os.path.exists("/etc/rc.local"):
         os.system("sudo chmod 755 /etc/rc.local")
         try:
             with open("/etc/rc.local", "w") as file_to_write:
-                file_to_write.write(
-                    "#!/bin/sh -e\n/" + user_home + "/startup.sh start\nexit 0"
-                )
+                file_to_write.write("#!/bin/sh -e\n/" + user_home + "/startup.sh start\nexit 0")
         except:
             print("Error: writing /etc/rc.local/ failed.")
     else:

@@ -20,9 +20,7 @@ class TestMovement(unittest.TestCase):
         controller = MagicMock()
         controller.motor = lambda idx: self.m1 if idx == 1 else self.m2
         # motor1_direction and motor2_direction simulate wiring/polarity
-        self.movement = Movement(
-            controller, motor1_direction=FORWARD, motor2_direction=FORWARD
-        )
+        self.movement = Movement(controller, motor1_direction=FORWARD, motor2_direction=FORWARD)
 
     def test_forward_sets_throttles_positive(self):
         self.movement.forward()

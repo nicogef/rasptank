@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rasptank Controller</title>
+
+  <!-- Prefer external styles hosted on nicogef.github.io (non-blocking) -->
+  <link rel="stylesheet" href="https://nicogef.github.io/css/main.css">
+  <link rel="stylesheet" href="https://nicogef.github.io/css/theme-dark.css">
+
+  <!-- Local fallback styles -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="container py-2">
+    <h1>Rasptank Controller</h1>
+    <p class="muted">Connect to the Rasptank websocket server and send commands.</p>
+  </header>
+
+  <main class="container">
+    <section class="card p-3 mb-3">
+      <h2 class="mb-3">Connection</h2>
+      <div class="row" style="align-items:flex-end; gap: 1rem;">
+        <div class="col">
+          <label for="host">Host</label>
+          <input id="host" class="input" type="text" placeholder="Hostname or IP" />
+        </div>
+        <div class="col">
+          <label for="port">Port</label>
+          <input id="port" class="input" type="number" value="8888" />
+        </div>
+        <div class="col">
+          <label for="username">Username</label>
+          <input id="username" class="input" type="text" value="admin" />
+        </div>
+        <div class="col">
+          <label for="password">Password</label>
+          <input id="password" class="input" type="password" value="123456" />
+        </div>
+        <div class="col-auto">
+          <button id="btnConnect" class="btn">Connect</button>
+        </div>
+        <div class="col-auto">
+          <span id="status" class="badge">Disconnected</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="card p-3 mb-3">
+      <h2 class="mb-3">Movement</h2>
+      <div class="row" style="gap:0.5rem;">
+        <div class="col-auto"><button data-cmd="forward" class="btn">Forward</button></div>
+        <div class="col-auto"><button data-cmd="backward" class="btn">Backward</button></div>
+        <div class="col-auto"><button data-cmd="left" class="btn">Left</button></div>
+        <div class="col-auto"><button data-cmd="right" class="btn">Right</button></div>
+        <div class="col-auto"><button data-cmd="DS" class="btn outline">Stop</button></div>
+      </div>
+      <div class="mt-3">
+        <label for="speed">Speed (wsB)</label>
+        <input id="speed" type="range" min="0" max="100" value="50" />
+        <span id="speedVal">50</span>
+        <button id="btnSetSpeed" class="btn ghost">Set Speed</button>
+      </div>
+    </section>
+
+    <section class="card p-3 mb-3">
+      <h2 class="mb-3">Servos</h2>
+      <div class="row" style="gap:0.5rem;">
+        <div class="col-auto"><button data-cmd="armUp" class="btn">Arm Up</button></div>
+        <div class="col-auto"><button data-cmd="armDown" class="btn">Arm Down</button></div>
+        <div class="col-auto"><button data-cmd="armStop" class="btn outline">Arm Stop</button></div>
+        <div class="col-auto"><button data-cmd="handUp" class="btn">Hand Up</button></div>
+        <div class="col-auto"><button data-cmd="handDown" class="btn">Hand Down</button></div>
+        <div class="col-auto"><button data-cmd="handStop" class="btn outline">Hand Stop</button></div>
+        <div class="col-auto"><button data-cmd="lookleft" class="btn">Wrist Left</button></div>
+        <div class="col-auto"><button data-cmd="lookright" class="btn">Wrist Right</button></div>
+        <div class="col-auto"><button data-cmd="LRstop" class="btn outline">Wrist Stop</button></div>
+        <div class="col-auto"><button data-cmd="grab" class="btn">Claw Grab</button></div>
+        <div class="col-auto"><button data-cmd="loose" class="btn">Claw Loose</button></div>
+        <div class="col-auto"><button data-cmd="GLstop" class="btn outline">Claw Stop</button></div>
+        <div class="col-auto"><button data-cmd="up" class="btn">Camera Up</button></div>
+        <div class="col-auto"><button data-cmd="down" class="btn">Camera Down</button></div>
+        <div class="col-auto"><button data-cmd="UDstop" class="btn outline">Camera Stop</button></div>
+        <div class="col-auto"><button data-cmd="home" class="btn ghost">Home</button></div>
+      </div>
+    </section>
+
+    <section class="card p-3 mb-3">
+      <h2 class="mb-3">Info</h2>
+      <div class="row" style="gap:0.5rem;">
+        <div class="col-auto"><button id="btnGetInfo" class="btn">Get Info</button></div>
+      </div>
+      <pre id="info" class="mt-3" style="white-space:pre-wrap; word-break:break-word;">{}</pre>
+    </section>
+
+    <section class="card p-3">
+      <h2 class="mb-3">Log</h2>
+      <div id="log" class="log"></div>
+    </section>
+  </main>
+
+  <footer class="container py-2 muted">
+    <small>Using styles from nicogef.github.io/css when available.</small>
+  </footer>
+
+  <script src="main.js"></script>
+</body>
+</html>
