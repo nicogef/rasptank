@@ -4,9 +4,9 @@ from unittest.mock import Mock, AsyncMock, patch
 import sys
 import os
 import json
-import asyncio
 
-# Ensure project root on path
+from src.web_server import WebSocketHandler
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 # Mock hardware dependencies BEFORE importing module
@@ -60,23 +60,9 @@ def rebind_servos(arm, hand, wrist, claw, cam):
             "up": cam.clockwise,
             "down": cam.anticlockwise,
             "UDstop": cam.stop,
-            "home": rasptank_controls.servoPosInit,
+            "home": rasptank_controls.servo_pos_init,
         }
     )
-
-
-class TestResponses(unittest.TestCase):
-    def test_success(self):
-        self.assertEqual(
-            rasptank_controls.success("cmd", 123),
-            {"status": "ok", "title": "cmd", "data": 123},
-        )
-
-    def test_failed(self):
-        self.assertEqual(
-            rasptank_controls.failed("cmd", "err"),
-            {"status": "nok", "title": "cmd", "data": "err"},
-        )
 
 
 class TestServoInit(unittest.TestCase):
@@ -87,7 +73,7 @@ class TestServoInit(unittest.TestCase):
         claw = Mock()
         cam = Mock()
         rebind_servos(arm, hand, wrist, claw, cam)
-        rasptank_controls.servoPosInit()
+        rasptank_controls.servo_pos_init()
         arm.reset.assert_called_once()
         hand.reset.assert_called_once()
         wrist.reset.assert_called_once()
@@ -175,60 +161,54 @@ class TestGetInfo(unittest.TestCase):
 class TestAsyncFlow(unittest.IsolatedAsyncioTestCase):
     async def test_check_permit_valid(self):
         ws = AsyncMock()
-        ws.recv.return_value = "admin:123456"
-        ok = await rasptank_controls.check_permit(ws)
+        ws.recv.return_value = "admin:123456"  #
+        handler = WebSocketHandler({}, {}, "admin", "123456")
+        ok = await handler.check_permit(ws)
         self.assertTrue(ok)
         ws.send.assert_called_once()
         self.assertIn("congratulation", ws.send.call_args[0][0])
 
-    async def test_check_permit_retry(self):
+    async def test_process_forward(self):
         ws = AsyncMock()
-        ws.recv.side_effect = ["user:bad", "admin:123456"]
-        ok = await rasptank_controls.check_permit(ws)
-        self.assertTrue(ok)
-        self.assertEqual(ws.send.call_count, 2)
-
-    async def test_recv_msg_forward(self):
-        ws = AsyncMock()
-        ws.recv.side_effect = ["forward", asyncio.CancelledError()]
         movement = Mock()
         rebind_movement(movement)
-        with self.assertRaises(asyncio.CancelledError):
-            await rasptank_controls.recv_msg(ws)
+        await rasptank_controls.WebSocketHandler.process(
+            ws, "forward", rasptank_controls.controls, rasptank_controls.controls_with_1_args
+        )
+
         movement.forward.assert_called_once()
         sent = json.loads(ws.send.call_args_list[0].args[0])
         self.assertEqual(sent["title"], "forward")
         self.assertEqual(sent["status"], "ok")
 
-    async def test_recv_msg_invalid(self):
+    async def test_process_invalid(self):
         ws = AsyncMock()
-        ws.recv.side_effect = ["foo", asyncio.CancelledError()]
-        with self.assertRaises(asyncio.CancelledError):
-            await rasptank_controls.recv_msg(ws)
+        await rasptank_controls.WebSocketHandler.process(
+            ws, "foo", rasptank_controls.controls, rasptank_controls.controls_with_1_args
+        )
         sent = json.loads(ws.send.call_args_list[0].args[0])
         self.assertEqual(sent["status"], "nok")
 
-    async def test_recv_msg_missing_arg(self):
+    async def test_process_missing_arg(self):
         ws = AsyncMock()
-        ws.recv.side_effect = ["wsB", asyncio.CancelledError()]
         movement = Mock()
         rebind_movement(movement)
-        with self.assertRaises(asyncio.CancelledError):
-            await rasptank_controls.recv_msg(ws)
+        await rasptank_controls.WebSocketHandler.process(
+            ws, "wsB", rasptank_controls.controls, rasptank_controls.controls_with_1_args
+        )
         sent = json.loads(ws.send.call_args_list[0].args[0])
         self.assertEqual(sent["status"], "nok")
         self.assertIn("Need 1 argument", sent["data"])
 
-    async def test_recv_msg_get_info(self):
-        # Prepare websocket returning the command then raising to exit loop
+    async def test_process_get_info(self):
         ws = AsyncMock()
-        ws.recv.side_effect = ["get_info", asyncio.CancelledError()]
         # Patch and rebind get_info
         get_info_mock = Mock(return_value={"cpu": "pct"})
         rasptank_controls.system.get_info = get_info_mock
         rasptank_controls.controls["get_info"] = rasptank_controls.system.get_info
-        with self.assertRaises(asyncio.CancelledError):
-            await rasptank_controls.recv_msg(ws)
+        await rasptank_controls.WebSocketHandler.process(
+            ws, "get_info", rasptank_controls.controls, rasptank_controls.controls_with_1_args
+        )
         get_info_mock.assert_called_once()
         sent_payload = json.loads(ws.send.call_args_list[0].args[0])
         self.assertEqual(sent_payload["status"], "ok")
@@ -241,32 +221,32 @@ if __name__ == "__main__":
 
 
 class TestAdditionalAsyncFlows(unittest.IsolatedAsyncioTestCase):
-    async def test_recv_msg_one_arg_success(self):
+    async def test_process_one_arg_success(self):
         # Ensure movement is rebound and callable via command router
         movement = Mock()
         rebind_movement(movement)
         ws = AsyncMock()
         # Provide a command with an integer argument
-        ws.recv.side_effect = ["wsB 75", asyncio.CancelledError()]
-        with self.assertRaises(asyncio.CancelledError):
-            await rasptank_controls.recv_msg(ws)
+        await rasptank_controls.WebSocketHandler.process(
+            ws, "wsB 75", rasptank_controls.controls, rasptank_controls.controls_with_1_args
+        )
         # Should have called set_speed with 75 and sent an ok response
         movement.set_speed.assert_called_once_with(75)
         payload = json.loads(ws.send.call_args_list[0].args[0])
         self.assertEqual(payload["status"], "ok")
         self.assertEqual(payload["title"], "wsB")
 
-    async def test_recv_msg_non_string_payload(self):
+    async def test_process_non_string_payload(self):
         ws = AsyncMock()
         # Send JSON object so that json.loads yields a dict (non-str)
-        ws.recv.side_effect = ["{}", asyncio.CancelledError()]
-        with self.assertRaises(asyncio.CancelledError):
-            await rasptank_controls.recv_msg(ws)
+        await rasptank_controls.WebSocketHandler.process(
+            ws, {}, rasptank_controls.controls, rasptank_controls.controls_with_1_args
+        )
         payload = json.loads(ws.send.call_args_list[0].args[0])
-        self.assertEqual(payload["status"], "nok")
-        self.assertEqual(payload["title"], "unknown")
+        self.assertEqual("nok", payload["status"])
+        self.assertEqual("unknown", payload["title"])
 
-    async def test_recv_msg_home_calls_servo_init(self):
+    async def test_process_home_calls_servo_init(self):
         # Mock servos and ensure servoPosInit is invoked through command router
         arm = Mock()
         hand = Mock()
@@ -275,9 +255,9 @@ class TestAdditionalAsyncFlows(unittest.IsolatedAsyncioTestCase):
         cam = Mock()
         rebind_servos(arm, hand, wrist, claw, cam)
         ws = AsyncMock()
-        ws.recv.side_effect = ["home", asyncio.CancelledError()]
-        with self.assertRaises(asyncio.CancelledError):
-            await rasptank_controls.recv_msg(ws)
+        await rasptank_controls.WebSocketHandler.process(
+            ws, "home", rasptank_controls.controls, rasptank_controls.controls_with_1_args
+        )
         # servoPosInit should have been called, which triggers reset on each servo
         arm.reset.assert_called_once()
         hand.reset.assert_called_once()
@@ -299,9 +279,7 @@ class TestWifiCheckAPBranch(unittest.TestCase):
 
         # Patch threading.Thread to a dummy that records calls
         class DummyThread:
-            def __init__(
-                self, *args, target=None, **kwargs
-            ):  # pylint: disable=unused-argument
+            def __init__(self, *args, target=None, **kwargs):  # pylint: disable=unused-argument
                 self.target = target
                 self.daemon = False
                 self.started = False

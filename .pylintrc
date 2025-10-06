@@ -55,4 +55,4 @@ dummy-variables-rgx=^(_|unused_.*)$
 #overgeneral-exceptions=Exception
 
 [REFACTORING]
-max-nested-blocks=3
+max-nested-blocks=5

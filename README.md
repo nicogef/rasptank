@@ -70,3 +70,19 @@ Outputs (after running tests):
 Notes:
 - If any tool is missing, the script will let you know what to install.
 - The audit step uses pip-audit and checks requirements.txt when present, otherwise the current environment.
+
+
+## Mock backend for manual UI testing
+
+A simple websocket mock server is provided to test the standalone controller web UI without hardware.
+
+How to run:
+- Install dependency (locally only): `pip install websockets`
+- Start the server: `python -m scripts.mock_server` (listens on ws://0.0.0.0:8889)
+- Open controller_web/index.html in your browser (e.g., double-click or serve statically)
+- In the Connection section, set Host to `127.0.0.1` and Port to `8889`, then click Connect.
+- Use the buttons and controls; responses are shown in the page log and in the server console.
+
+Notes:
+- The mock server implements the same credential handshake: it expects `admin:123456` as the first message.
+- The server logs commands and replies with JSON objects that resemble the real backend responses.
