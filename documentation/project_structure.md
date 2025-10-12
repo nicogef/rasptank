@@ -50,30 +50,38 @@ As a [user], I want [feature], so that [value/goal].
 ### Acceptance Criteria
 - US_000X_AC_0001: [Testable statement or Gherkin scenario]
 - US_000X_AC_0002: [Testable statement or Gherkin scenario]
-
-### Traceability
-- [List of linked FR/NFR/SFR IDs]
-
-### Testing Strategy
-- **Test Types:** [Unit, Integration, End-to-End, Manual, etc.]
-- **Test Files:** [List of relevant test files]
-- **Test Approach:**
-  - [How each acceptance criterion will be verified]
-- **Code Modules:** [List of code files/modules implementing the feature]
 ```
+### Documentation Structure
 
-### Documentation Structure and Traceability
-
-```
-documentation/
-  user_stories.md      # User stories, feature items, acceptance criteria, traceability, testing strategy
-  project_structure.md # This process and structure description
-  requirements.md      # (Optional) Glossary of FR/NFR/SFR, requirement IDs, etc.
-  design/              # (Optional) Design diagrams, architecture docs
-
-src/                   # Application code (modules, components)
-controller_web/        # Web UI code
-tests/                 # Automated BDD tests, step definitions
-```
+-   `documentation/`:
+    -   `user_stories.md`: Contains user stories, feature items, acceptance criteria, traceability, and testing strategies.
+    -   `project_structure.md`: Describes the project's organization, roles, and processes (this file).
+    -   `requirements.md`: (Optional) A glossary of requirements (FR, NFR, etc.) and their corresponding IDs.
+    -   `design/`: (Optional) A directory for design diagrams, architecture documents, and other visual materials.
+-   `src/`: Houses the core application code, including modules and components.
+-   `controller_web/`: Contains the code for the web-based user interface.
+-   `tests/`: Includes automated BDD tests and their step definitions.
 
 This structure ensures all information for each user story is grouped together, with clear links from requirements to design, implementation, and testing.
+
+# Code Style and Quality
+
+This project enforces a consistent code style and quality through a combination of automated tools and established best practices.
+
+-   **Formatting**: Code formatting is standardized using **Black**. All contributions must be formatted before submission.
+-   **Linting**: **Pylint** is used to identify and report code quality issues. Adherence to the rules defined in `.pylintrc` is required.
+-   **Testing**: The project maintains a comprehensive test suite, including:
+    -   **Unit Tests**: Located in the `tests/` directory, these verify individual components in isolation.
+    -   **BDD Tests**: Found in the `bdd/` directory, these ensure that the system's behavior aligns with the specified requirements.
+
+All checks are enforced automatically through the CI/CD pipeline.
+
+# Design and CI/CD Constraints
+
+- **CI/CD**: Governed by `.github/workflows/ci.yml`.
+- **Local CI runner**: `scripts/ci.py` provides a local equivalent for CI checks.
+
+### Design Constraints
+- **CI Parity**: `scripts/ci.py` and `.github/workflows/ci.yml` shall be kept in sync. Any task added to one must be added to the other to ensure local and remote builds are consistent.
+- **Python Version**: The project targets Python 3.11, as reflected in CI.
+- **Code Style**: Black is used for formatting, and Pylint for linting. Configuration is in `pyproject.toml` and `.pylintrc`.

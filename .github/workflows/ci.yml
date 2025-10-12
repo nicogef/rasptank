@@ -48,8 +48,10 @@ jobs:
         if [ -f .pylintrc ]; then pylint --rcfile=.pylintrc .; else pylint .; fi
 
     - name: Test with pytest
-      run: pytest
+      run: pytest -c tests/pytest.ini tests
 
+    - name: Run BDD tests
+      run: pytest -c bdd/pytest.ini bdd
 
     - name: Upload test report artifact
       if: always()

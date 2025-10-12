@@ -1,0 +1,13 @@
+# US_0001 Sequence Diagram
+
+This file should contain a sequence diagram showing the flow of drive commands from UI to hardware.
+
+## Placeholder Description
+- User clicks button in web UI
+- Web UI sends WebSocket message to server
+- Server processes command via rasptank_controls.py
+- Command sent to motor controller
+- Hardware responds
+
+*Note: Replace with actual SVG diagram.*
+
