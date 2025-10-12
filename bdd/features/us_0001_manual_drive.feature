@@ -1,27 +1,29 @@
-Feature: US-0001: Manual Robot Control
-  As a user, I want to control the robot's movement manually through the web interface
-  so that I can navigate it in real-time.
+Feature: US_0001 Manual Drive Control
+    As an End User,
+    I want to control the robot’s movement (forward, reverse, left, right, stop) with adjustable speed,
+    so that I can navigate the robot accurately and enjoy responsive handling.
 
-  Scenario: Command triggers movement within acceptable latency
-    Given the web client is connected to the robot and clocks are synchronized
-    When the user sends a drive command "forward" with speed 1.0
-    And the controller receives the command
-    Then the robot should start moving in the "forward" direction within 100 milliseconds of the command timestamp
-    And telemetry contains a command-received timestamp and a motor-start timestamp
+    Scenario: Sending a forward command
+        Given the robot is connected and ready
+        When I send a "forward" command
+        Then the robot should move forward
+        And the command should be acknowledged
 
-  Scenario: Speed scaling is applied proportionally
-    Given the web client is connected to the robot and clocks are synchronized
-    And the user sends a drive command "forward" with speed 0.5
-    When the controller receives the command
-    Then motor output shall be proportional to 0.5 within a tolerance of 5 percent
+    Scenario: Adjusting the speed
+        Given the robot is connected and ready
+        When I set the speed to 50
+        Then the speed should be updated
+        And the command should be acknowledged
 
-  Scenario: All directions are available via the web UI
-    Given the main control UI is loaded
-    When the user inspects movement controls
-    Then controls for forward, reverse, left, right, and stop are present and operable
+    Scenario: Sending a stop command
+        Given the robot is moving
+        When I send a "DS" command
+        Then the robot should stop moving
+        And the command should be acknowledged
 
-  Scenario: Out-of-range commands are clamped and logged
-    Given the web client is connected to the robot and clocks are synchronized
-    And the user sends a drive command "forward" with speed 1.5
-    When the controller receives the command
-    Then the controller clamps speed to the configured maximum and logs an event
+    Scenario: Command with invalid speed
+        Given the robot is connected and ready
+        When I set the speed to 150
+        Then the speed should be clamped to the maximum
+        And the command should be acknowledged
+

@@ -88,16 +88,30 @@ Server acknowledges with:
 ```
 
 #### Sequence Diagram
-This should contain a sequence diagram showing the flow of drive commands from UI to hardware.
+This diagram shows the flow of drive commands from the UI to the hardware, based on the current implementation.
 
-**Placeholder Description**
-- User clicks button in web UI
-- Web UI sends WebSocket message to server
-- Server processes command via rasptank_controls.py
-- Command sent to motor controller
-- Hardware responds
+```plantuml
+@startuml
+title Manual Drive Command Flow
+actor User
+participant "Web UI (main.js)" as UI
+participant "WebSocketHandler (web_server.py)" as WSH
+participant "Rasptank Controls (rasptank_controls.py)" as Controls
+participant "Movement (motors.py)" as Movement
+participant "Hardware (PCA9685)" as HW
 
-*Note: Replace with actual SVG diagram.*
+User -> UI: Clicks movement button (e.g., "Forward")
+UI -> WSH: ws.send("forward")
+
+WSH -> WSH: process(cmd="forward")
+WSH -> Controls: Looks up "forward" in `controls` dict
+Controls -> Movement: Calls `MOVEMENT.forward()`
+Movement -> HW: Sets PWM signals for motors
+WSH --> UI: ws.send(JSON_SUCCESS_RESPONSE)
+
+UI -> UI: Logs response
+@enduml
+```
 
 #### Drive Command Lifecycle and Safety Checklist
 

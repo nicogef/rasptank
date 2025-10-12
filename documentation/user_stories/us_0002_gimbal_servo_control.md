@@ -56,10 +56,51 @@ As an End User, I want to control the camera gimbal (pan/tilt) with configurable
 ### Design Artifacts
 
 #### Servo Calibration Diagram
-*Placeholder: Diagram showing servo calibration process.*
+*Description based on code:*
+- Each servo (ARM, HAND, WRIST, CLAW, CAMERA) initializes to 90 degrees.
+- Movement range: 0 to 180 degrees.
+- Direction: Clockwise (1) or Anticlockwise (-1), adjustable per servo.
+- Speed: Adjustable (default 1), affects step size per time unit.
+- Calibration: Servos reset to initial position via `reset()` method.
+- Threaded operation: Continuous movement in a daemon thread until stopped.
 
 #### Gimbal Control Sequence Diagram
-*Placeholder: Sequence diagram for gimbal control interactions.*
+This diagram illustrates the flow for controlling a servo, like the camera gimbal, from the UI to the hardware.
+
+```plantuml
+@startuml
+title Gimbal Control Sequence
+actor User
+participant "Web UI (main.js)" as UI
+participant "WebSocketHandler (web_server.py)" as WSH
+participant "Rasptank Controls (rasptank_controls.py)" as Controls
+participant "ServoCtrlThread (servo.py)" as ServoThread
+participant "Hardware (PCA9685)" as HW
+
+User -> UI: Clicks servo button (e.g., "Camera Up")
+UI -> WSH: ws.send("up")
+
+WSH -> WSH: process(cmd="up")
+WSH -> Controls: Looks up "up" in `controls` dict
+Controls -> ServoThread: Calls `CAMERA.clockwise()`
+
+ServoThread -> ServoThread: move(direction=CLOCKWISE)
+ServoThread -> ServoThread: Sets target angle to max
+ServoThread -> ServoThread: resume()
+note right of ServoThread: Sets threading event to start movement
+
+WSH --> UI: ws.send(JSON_SUCCESS_RESPONSE)
+UI -> UI: Logs response
+
+ServoThread -> ServoThread: run() loop wakes up
+loop until target angle or stop
+    ServoThread -> ServoThread: __next_step()
+    ServoThread -> HW: __set_angle() -> sets PWM signal
+end
+@enduml
+```
+
+*Note: The servo movement runs in a background thread, allowing the server to respond to the UI immediately while the hardware moves.*
 
 ### Implementation tasks (backlog suggestions)
 - **T1:** Implement servo positioning and limits (US_0002_FI_0001) — Priority: High, Effort: 2 days, Status: Pending

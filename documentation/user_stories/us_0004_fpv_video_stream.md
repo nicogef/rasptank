@@ -50,7 +50,73 @@ As an End User, I want to view live camera video with adjustable quality, so tha
 ### Design Artifacts
 
 #### Video Streaming Architecture Diagram
-*Placeholder: Diagram showing video streaming components and data flow.*
+This diagram shows the architecture for capturing and streaming video.
+
+```plantuml
+@startuml
+title Video Streaming Architecture
+
+package "web" {
+    class BaseCamera {
+        +thread: Thread
+        +frame: bytes
+        +event: CameraEvent
+        +get_frame(): bytes
+        +{static}_thread()
+    }
+
+    class CameraEvent {
+        +events: dict
+        +wait()
+        +set()
+        +clear()
+    }
+
+    class Camera(BaseCamera) {
+        +{static}frames()
+    }
+
+    class CVThread {
+        +run()
+        +mode()
+        +elementDraw()
+    }
+}
+
+package "picamera2" {
+    class Picamera2
+}
+
+actor "Client" as Client
+participant "Flask App (app.py)" as FlaskApp
+
+Client -> FlaskApp: GET /video_feed
+FlaskApp -> Camera: get_frame()
+Camera -> BaseCamera: get_frame()
+BaseCamera -> CameraEvent: wait()
+
+note right of BaseCamera
+  The _thread in BaseCamera runs in the background,
+  continuously getting frames from the Camera.frames() generator.
+end note
+
+Camera.frames() -> Picamera2: capture_array()
+Picamera2 --> Camera.frames(): returns frame
+Camera.frames() -> CVThread: mode(mode, frame)
+CVThread -> CVThread: Processes frame
+CVThread --> Camera.frames(): returns processed frame
+Camera.frames() --> BaseCamera._thread: yields frame
+
+BaseCamera._thread -> BaseCamera: frame = new_frame
+BaseCamera._thread -> CameraEvent: set()
+
+CameraEvent --> BaseCamera: Event is set
+BaseCamera --> FlaskApp: returns frame
+FlaskApp --> Client: Responds with MJPEG frame
+@enduml
+```
+
+*Note: The video stream is managed by a multi-threaded system. A background thread in `BaseCamera` continuously captures frames from the `Picamera2` library via the `Camera.frames()` generator. An optional `CVThread` can process these frames. A `CameraEvent` object synchronizes access, ensuring that the Flask web server can efficiently retrieve and stream the latest frame to the client as an MJPEG feed.*
 
 ### Implementation tasks (backlog suggestions)
 - **T1:** Set up video streaming (US_0004_FI_0001) — Priority: High, Effort: 3-4 days, Status: Pending

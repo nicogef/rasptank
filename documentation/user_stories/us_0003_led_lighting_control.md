@@ -52,7 +52,29 @@ As an End User, I want to control onboard LEDs for illumination and status indic
 ### Design Artifacts
 
 #### LED Control State Diagram
-*Placeholder: Diagram showing LED control states and transitions.*
+This state diagram shows the operational states of the `LedCtrl` module.
+
+```plantuml
+@startuml
+title LED Control State Diagram
+
+state "Off" as Off
+state "On" as On
+
+[*] --> Off: Initialized
+
+Off -> On: set_all_led_rgb() / show()
+Off -> On: set_all_led_brightness() / show()
+
+On -> On: set_all_led_rgb() / show()
+On -> On: set_all_led_brightness() / show()
+On -> On: reset() / show()
+On -> Off: stop() or pause()
+
+@enduml
+```
+
+*Note: The `LedCtrl` class manages the state of the LED strip. Any command that changes color or brightness transitions the system to an "On" state by writing new values to the SPI device. The `stop()` or `pause()` command turns the LEDs off.*
 
 ### Implementation tasks (backlog suggestions)
 - **T1:** Implement LED on/off and brightness (US_0003_FI_0001) — Priority: Medium, Effort: 1-2 days, Status: Pending

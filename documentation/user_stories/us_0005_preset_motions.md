@@ -48,7 +48,39 @@ As an End User, I want preset movement patterns (e.g., square, figure-eight), so
 ### Design Artifacts
 
 #### Motion Pattern Flowcharts
-*Placeholder: Flowcharts for preset motion patterns (e.g., square, figure-eight).*
+This flowchart illustrates the logic for the "Automatic" obstacle avoidance preset motion.
+
+```plantuml
+@startuml
+title Automatic Obstacle Avoidance Flow
+
+start
+:Call `automaticProcessing()`;
+:Get distance from ultrasonic sensor;
+
+if (distance >= 40cm?) then (yes)
+    :Move forward;
+else (no)
+    if (distance > 20cm?) then (yes)
+        :Turn left slightly;
+        :Measure distance (distLeft);
+        :Turn right slightly;
+        :Measure distance (distRight);
+        if (distLeft >= distRight?) then (yes)
+            :Turn left;
+        else (no)
+            :Turn right;
+        endif
+    else (no)
+        :Move backward;
+    endif
+endif
+
+stop
+@enduml
+```
+
+*Note: This logic is implemented in the `automaticProcessing` method within the `Functions` class in `web/functions.py`. It uses the `ultra.checkdist()` function to get sensor readings and the `move.move()` function to control the motors.*
 
 ### Implementation tasks (backlog suggestions)
 - **T1:** Implement motion patterns (US_0005_FI_0001) — Priority: Medium, Effort: 2 days, Status: Pending

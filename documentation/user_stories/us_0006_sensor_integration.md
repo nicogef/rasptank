@@ -48,7 +48,31 @@ As an End User, I want access to ultrasonic sensor readings, so that I can detec
 ### Design Artifacts
 
 #### Sensor Data Flow Diagram
-*Placeholder: Diagram showing sensor data collection and flow to UI/API.*
+This diagram shows how the ultrasonic sensor data is read and used.
+
+```plantuml
+@startuml
+title Sensor Data Flow
+
+package "web" {
+    participant "ultra.py" as Ultra
+}
+
+package "gpiozero" {
+    participant "DistanceSensor" as GpioSensor
+}
+
+participant "Application Logic" as AppLogic
+
+AppLogic -> Ultra: checkdist()
+Ultra -> GpioSensor: sensor.distance
+GpioSensor --> Ultra: returns distance
+Ultra --> AppLogic: returns distance in cm
+
+@enduml
+```
+
+*Note: The `ultra.py` module provides a simple `checkdist()` function that reads the distance from a `gpiozero.DistanceSensor` instance. This function is then called by other parts of the application, such as the preset motion logic in `web/functions.py`, to get obstacle information.*
 
 ### Implementation tasks (backlog suggestions)
 - **T1:** Implement sensor reading (US_0006_FI_0001) — Priority: Medium, Effort: 2 days, Status: Pending
