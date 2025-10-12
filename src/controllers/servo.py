@@ -7,9 +7,7 @@ ANTICLOCKWISE = -1
 
 
 class ServoCtrlThread(threading.Thread):  # pylint: disable=too-many-instance-attributes
-
     def __init__(self, name, controller, channel_number, *, position=90, direction=CLOCKWISE):
-
         self.__name = name
         self.__servo = controller.servo(channel_number)
 

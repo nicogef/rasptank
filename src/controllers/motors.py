@@ -3,7 +3,6 @@ REVERSE = -1
 
 
 class Movement:
-
     def __init__(self, controller, motor1_direction, motor2_direction, *, speed=100):
         self.__motor1 = controller.motor(1)
         self.__motor1_direction = motor1_direction

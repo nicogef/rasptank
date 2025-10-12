@@ -14,7 +14,6 @@ def iterable_mock_open(read_data):
 
 
 class TestSystemGetInfo(unittest.TestCase):
-
     @patch("src.system.psutil.cpu_percent", return_value=12.5)
     @patch("src.system.psutil.virtual_memory", return_value=[0, 0, 33])
     @patch("builtins.open", new_callable=iterable_mock_open, read_data="45000\n")

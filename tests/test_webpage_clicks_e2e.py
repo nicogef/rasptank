@@ -36,8 +36,8 @@ def serve_controller_web():
 
 def test_clicks_send_expected_commands():
     with serve_controller_web() as url:
-        with sync_playwright() as pw:
-            browser = pw.chromium.launch()
+        with sync_playwright() as playwright_ctx:
+            browser = playwright_ctx.chromium.launch()
             page = browser.new_page()
 
             # Stub WebSocket in page to capture outbound messages produced by UI clicks
@@ -89,20 +89,20 @@ def test_clicks_send_expected_commands():
             browser.close()
 
     # After clicking, the first message should be the credential handshake
-    assert any(m.startswith("admin:") for m in sent), f"Handshake not sent: {sent}"
+    assert any(message.startswith("admin:") for message in sent), f"Handshake not sent: {sent}"
 
     # Extract commands that were sent by clicks (ignore handshake)
-    clicked_cmds = [m for m in sent if not m.startswith("admin:")]
+    clicked_cmds = [message for message in sent if not message.startswith("admin:")]
     assert clicked_cmds, "No commands were sent by clicking buttons"
 
     # Validate that every message either matches a no-arg supported command or is a wsB <num>
     sup = set(mock_server.SUPPORTED_COMMANDS)
-    for m in clicked_cmds:
-        parts = m.split()
+    for message in clicked_cmds:
+        parts = message.split()
         cmd = parts[0]
         if cmd in sup:
             continue
         if cmd == "wsB":
-            assert len(parts) == 2 and parts[1].isdigit(), f"wsB should have a numeric arg: {m}"
+            assert len(parts) == 2 and parts[1].isdigit(), f"wsB should have a numeric arg: {message}"
             continue
-        pytest.fail(f"Unexpected command sent by UI: {m}")
+        pytest.fail(f"Unexpected command sent by UI: {message}")

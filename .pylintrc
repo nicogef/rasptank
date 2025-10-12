@@ -6,7 +6,8 @@ ignore-patterns=
     tests/fixtures/.*,
     .*_generated\.py,
     .*__init__\.py,
-    setup.*py
+    setup.*py,
+    scripts/ci.py
 py-version=3.13
 jobs=0
 load-plugins=pylint.extensions.mccabe,pylint.extensions.docparams

@@ -12,7 +12,6 @@ class FakeServo:
 
 class TestServoCtrlThread(unittest.TestCase):
     def setUp(self):
-
         # prepare fake controller with servo(channel) factory
         self.fake_servo = FakeServo()
         controller = MagicMock()

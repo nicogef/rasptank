@@ -32,7 +32,6 @@ class LedCtrl(threading.Thread):
         sequence="GRB",
         default_color=PREDEFINED_COLORS["black"],
     ):
-
         # validate spi state
         if not spi or not spi.is_open:
             raise ValueError("SPI is not initialized. Please initialize SPI first.")

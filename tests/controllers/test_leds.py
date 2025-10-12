@@ -68,8 +68,8 @@ class TestLedCtrl(unittest.TestCase):
         ctrl.show()
 
         # Build expected command list considering brightness scaling
-        def scale(vals, b):
-            return [round(x * (b / 255)) for x in vals]
+        def scale(vals, brightness):
+            return [round(x * (brightness / 255)) for x in vals]
 
         expected = []
         expected += scale([100, 0, 0], 255)

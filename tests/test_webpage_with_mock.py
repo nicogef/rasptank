@@ -13,8 +13,8 @@ class TestWebpageActionsAgainstMock(unittest.TestCase):
         # Load the standalone controller UI HTML
         root = os.path.dirname(os.path.dirname(__file__))
         html_path = os.path.join(root, "controller_web", "index.html")
-        with open(html_path, "r", encoding="utf-8") as f:
-            self.html = f.read()
+        with open(html_path, "r", encoding="utf-8") as html_file:
+            self.html = html_file.read()
 
     def test_buttons_are_supported_by_mock(self):
         # Extract all data-cmd attributes declared in the UI

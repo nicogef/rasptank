@@ -115,10 +115,10 @@ def ap_thread():  # pragma: no cover
 
 def wifi_check():
     try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("1.1.1.1", 80))
-        ipaddr_check = s.getsockname()[0]
-        s.close()
+        wifi_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        wifi_socket.connect(("1.1.1.1", 80))
+        ipaddr_check = wifi_socket.getsockname()[0]
+        wifi_socket.close()
         print(ipaddr_check)
     except Exception:  # pylint: disable=broad-exception-caught
         ap_threading = threading.Thread(target=ap_thread)
@@ -129,7 +129,6 @@ def wifi_check():
 
 # Generic dispatcher used by tests and by any legacy callers expecting a single-string command API
 if __name__ == "__main__":  # pragma: no cover
-
     HOST = ""
     PORT = 10223  # Define port serial
     BUFSIZ = 1024  # Define buffer size

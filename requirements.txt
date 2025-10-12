@@ -1,7 +1,7 @@
 # Core runtime dependencies
 psutil
 numpy
-websockets
+websockets==13.0
 
 # Hardware-specific (Raspberry Pi) dependencies
 # Install only on Raspberry Pi (Linux on ARMv7 or AArch64)
@@ -10,8 +10,9 @@ adafruit-blinka; platform_system == "Linux" and (platform_machine == "armv7l" or
 adafruit-circuitpython-pca9685; platform_system == "Linux" and (platform_machine == "armv7l" or platform_machine == "aarch64")
 adafruit-circuitpython-motor; platform_system == "Linux" and (platform_machine == "armv7l" or platform_machine == "aarch64")
 
-# Test utilities (used by CI and local runs)
-pytest-timeout
+# Developer / test utilities are listed in requirements-dev.txt to keep runtime
+# dependencies separate from development tools. Install them with:
+#   pip install -r requirements-dev.txt
 
 # Optional: Web/Camera features
 # Note: These are optional and may be installed only on Raspberry Pi with camera support.
