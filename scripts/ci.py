@@ -137,16 +137,16 @@ def step_lint() -> int:
     ensure_tool("pylint")
     rcfile = ".pylintrc"
     # Lint only specific source directories instead of the entire project
-    source_dirs = ["src", "scripts", "tests", "bdd"]
-    existing_dirs = [d for d in source_dirs if (REPO_ROOT / d).exists()]
+    # source_dirs = ["src", "scripts", "tests", "bdd"]
+    # existing_dirs = [d for d in source_dirs if (REPO_ROOT / d).exists()]
 
-    if not existing_dirs:
-        print("No source directories found to lint")
-        return 0
+    # if not existing_dirs:
+    #     print("No source directories found to lint")
+    #     return 0
 
-    if (REPO_ROOT / rcfile).exists():
-        return run([PYTHON, "-m", "pylint", f"--rcfile={rcfile}"] + existing_dirs, check=False)
-    return run([PYTHON, "-m", "pylint"] + existing_dirs, check=False)
+    # if (REPO_ROOT / rcfile).exists():
+    return run([PYTHON, "-m", "pylint", f"--rcfile={rcfile}", "."], check=False)
+    # return run([PYTHON, "-m", "pylint"] + existing_dirs, check=False)
 
 
 def run_pytest_suite(suite_name: str, suite_path: str) -> int:
