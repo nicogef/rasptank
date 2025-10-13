@@ -40,9 +40,7 @@ def get_gpu_tempfunc():  # pragma: no cover
     Uses subprocess for robustness; errors propagate if the command is missing/fails.
     """
     cmd = shutil.which("vcgencmd") or "/opt/vc/bin/vcgencmd"
-    result = subprocess.run(
-        [cmd, "measure_temp"], check=True, capture_output=True, text=True
-    )
+    result = subprocess.run([cmd, "measure_temp"], check=True, capture_output=True, text=True)
     res = result.stdout.splitlines()[0] if result.stdout else ""
     return res.replace("temp=", "")
 

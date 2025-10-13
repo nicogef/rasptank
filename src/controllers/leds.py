@@ -32,7 +32,6 @@ class LedCtrl(threading.Thread):
         sequence="GRB",
         default_color=PREDEFINED_COLORS["black"],
     ):
-
         # validate spi state
         if not spi or not spi.is_open:
             raise ValueError("SPI is not initialized. Please initialize SPI first.")
@@ -42,14 +41,8 @@ class LedCtrl(threading.Thread):
         self.led_red_offset = sequence.find("R")
         self.led_green_offset = sequence.find("G")
         self.led_blue_offset = sequence.find("B")
-        if (
-            self.led_red_offset < 0
-            or self.led_green_offset < 0
-            or self.led_blue_offset < 0
-        ):
-            raise ValueError(
-                f"{sequence} is an invalid a permutation of 'R', 'G', 'B'."
-            )
+        if self.led_red_offset < 0 or self.led_green_offset < 0 or self.led_blue_offset < 0:
+            raise ValueError(f"{sequence} is an invalid a permutation of 'R', 'G', 'B'.")
         self.led_count = count
         self.default_color = default_color
         self.default_brightness = default_brightness
@@ -75,9 +68,7 @@ class LedCtrl(threading.Thread):
 
     def set_all_led_rgb(self, color):
         if len(color) != 3:
-            raise ValueError(
-                "Color must be a list of three integers representing RGB values."
-            )
+            raise ValueError("Color must be a list of three integers representing RGB values.")
         # Ensure we store a mutable list for per-LED updates later
         self.led_color = list(color) * self.led_count
         self.show()
@@ -96,10 +87,7 @@ class LedCtrl(threading.Thread):
         self.led_brightness[led] = brightness
 
     def show(self):
-        led_command = [
-            round(color * (self.led_brightness[led // 3] / 255))
-            for led, color in enumerate(self.led_color)
-        ]
+        led_command = [round(color * (self.led_brightness[led // 3] / 255)) for led, color in enumerate(self.led_color)]
         self.spi.write(led_command)
 
     def stop(self):

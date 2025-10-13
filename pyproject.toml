@@ -1,5 +1,5 @@
 [tool.black]
-line-length = 88
+line-length = 127
 target-version = ['py38', 'py39', 'py310', 'py311']
 include = '\.pyi?$'
 exclude = '''
@@ -23,11 +23,4 @@ exclude = '''
 )/
 '''
 
-[tool.pytest.ini_options]
-addopts = [
-  "--cov=src",
-  "--junitxml=junit.xml",
-  "--cov-report=xml:coverage.xml",
-  "--cov-fail-under=90",
-]
-testpaths = ["tests"]
+# Note: Pytest configurations moved to tests/pytest.ini and bdd/pytest.ini

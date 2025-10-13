@@ -5,7 +5,6 @@
 # Author      : devin
 
 import asyncio
-import json
 import os
 import socket
 import sys
@@ -28,6 +27,7 @@ from src.controllers.motors import Movement
 from src.controllers.servo import ServoCtrlThread
 from src.hardware.pca9685_controller import PCA9685Controller
 from src.hardware.spi_controller import SpiController
+from src.web_server import WebSocketHandler
 
 OLED_connection = 0  # pylint: disable=invalid-name
 
@@ -49,7 +49,7 @@ CAMERA = ServoCtrlThread("CAMERA", PCA9685_CTRL, 4)
 SERVOS = [ARM, HAND, WRIST, CLAW, CAMERA]
 
 
-def servoPosInit():  # pylint: disable=invalid-name
+def servo_pos_init():
     ARM.reset()
     HAND.reset()
     WRIST.reset()
@@ -93,7 +93,7 @@ controls = {
     "up": CAMERA.clockwise,
     "down": CAMERA.anticlockwise,
     "UDstop": CAMERA.stop,
-    "home": servoPosInit,  # call directly; no lambda needed
+    "home": servo_pos_init,
     # Motors
     "forward": MOVEMENT.forward,
     "backward": MOVEMENT.backward,
@@ -115,10 +115,10 @@ def ap_thread():  # pragma: no cover
 
 def wifi_check():
     try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("1.1.1.1", 80))
-        ipaddr_check = s.getsockname()[0]
-        s.close()
+        wifi_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        wifi_socket.connect(("1.1.1.1", 80))
+        ipaddr_check = wifi_socket.getsockname()[0]
+        wifi_socket.close()
         print(ipaddr_check)
     except Exception:  # pylint: disable=broad-exception-caught
         ap_threading = threading.Thread(target=ap_thread)
@@ -127,100 +127,8 @@ def wifi_check():
         time.sleep(1)
 
 
-def success(command, result):
-    return {"status": "ok", "title": command, "data": result}
-
-
-def failed(command, result):
-    return {"status": "nok", "title": command, "data": result}
-
-
-async def check_permit(websocket):
-    while True:
-        recv_str = await websocket.recv()
-        cred_dict = recv_str.split(":")
-        if cred_dict[0] == "admin" and cred_dict[1] == "123456":
-            response_str = "congratulation, you have connect with server\r\nnow, you can do something else"
-            await websocket.send(response_str)
-            return True
-        response_str = "sorry, the username or password is wrong, please submit again"
-        await websocket.send(response_str)
-
-
-# Function handles parsing and dispatch; keep as is for now
-# pylint: disable=too-complex
-async def recv_msg(websocket):
-
-    def _exec_single(command_str: str):
-        # Helper to execute one command string and return a response dict
-        cmd = command_str.split()[0]
-        try:
-            value = (
-                int(command_str.split()[1]) if len(command_str.split()) > 1 else None
-            )
-        except Exception:  # pylint: disable=broad-exception-caught
-            value = None
-        if cmd in controls:
-            controls[cmd]()
-            return success(cmd, f"Command {cmd} Executed")
-        if cmd in controls_with_1_args:
-            if value is not None:
-                controls_with_1_args[cmd](value)
-                return success(cmd, f"Command {cmd} Executed")
-            return failed(cmd, f"Command {cmd} Need 1 argument")
-        return failed(cmd, f"Command {cmd} Not Supported")
-
-    while True:
-        response = {"status": "ok", "title": "", "data": None}
-
-        data = await websocket.recv()
-        try:
-            data = json.loads(data)
-        except Exception as ex:  # pylint: disable=broad-exception-caught
-            print(ex)
-
-        if data is None or (isinstance(data, str) and not data.strip()):
-            print("No data received")
-            continue
-
-        print(data)
-        # Support multiple tasks in parallel when receiving a list of commands
-        if isinstance(data, list):
-            loop = asyncio.get_running_loop()
-            tasks = [
-                loop.run_in_executor(None, _exec_single, str(item)) for item in data
-            ]
-            results = await asyncio.gather(*tasks, return_exceptions=False)
-            await websocket.send(json.dumps(results))
-            continue
-
-        if isinstance(data, str):
-            command = data.split()[0]
-            value = int(data.split()[1]) if len(data.split()) > 1 else None
-            if command in controls:
-                controls[command]()
-                response = success(command, f"Command {command} Executed")
-            elif command in controls_with_1_args:
-                if value is not None:
-                    controls_with_1_args[command](value)
-                    response = success(command, f"Command {command} Executed")
-                else:
-                    response = failed(command, f"Command {command} Need 1 argument")
-            else:
-                response = failed(command, f"Command {command} Not Supported")
-        else:
-            response = failed("unknown", f"Command Not Supported: {data}")
-        json_dumps = json.dumps(response)
-        await websocket.send(json_dumps)
-
-
-async def main_logic(websocket, _path):
-    await check_permit(websocket)
-    await recv_msg(websocket)
-
-
+# Generic dispatcher used by tests and by any legacy callers expecting a single-string command API
 if __name__ == "__main__":  # pragma: no cover
-
     HOST = ""
     PORT = 10223  # Define port serial
     BUFSIZ = 1024  # Define buffer size
@@ -233,7 +141,7 @@ if __name__ == "__main__":  # pragma: no cover
         while 1:
             wifi_check()
             try:  # Start server,waiting for client
-                start_server = websockets.serve(main_logic, "0.0.0.0", 8888)
+                start_server = websockets.serve(WebSocketHandler(controls, controls_with_1_args), "0.0.0.0", 8888)
                 asyncio.get_event_loop().run_until_complete(start_server)
                 print("waiting for connection...")
                 break

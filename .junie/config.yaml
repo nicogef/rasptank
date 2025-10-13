@@ -1,0 +1,64 @@
+# Junie project policy configuration
+# This file defines the curated working set, guardrails, and conventions for this repository.
+# Date: 2025-10-12
+
+version: 1
+
+# Only these paths are considered in-scope for day-to-day development unless explicitly changed.
+allowed_paths:
+  - src/**
+  - tests/**
+  - scripts/**
+  - .github/**
+  - controller_web/**
+  - .junie/**
+
+# Root files that are tracked even with strict ignore rules
+tracked_root_files:
+  - README.md
+  - REQUIREMENTS.md
+  - pyproject.toml
+  - requirements.txt
+  - setup.py
+  - setup_HAT_V3.1.py
+  - codecov.yml
+
+constraints:
+  code:
+    language: python
+    min_python: "3.10"
+    formatting:
+      tool: black
+      line_length: 88
+    lint:
+      tool: pylint
+      fail_on: [error]
+    type_checking:
+      enabled: false
+  git:
+    branch_naming: "^(feat|fix|chore|docs|refactor|test)/[a-z0-9._-]+$"
+    require_issue_reference: false
+  security:
+    secret_scanning: true
+    protected_files:
+      - .junie/config.yaml
+      - .junie/rules.md
+
+workflows:
+  ci:
+    enforce_allowed_paths: true
+    skip_ignored_in_ci: true
+    # Hints for CI jobs/scripts that want to honor this policy
+    included_globs:
+      - src/**
+      - tests/**
+      - scripts/**
+      - controller_web/**
+      - .github/**
+
+# Optional, advisory metadata used by tooling or scripts
+metadata:
+  owners:
+    - handle: maintainer
+      contact: support@adeept.com
+  purpose: "Define and document the repository's curated working surface and contributor guidelines."

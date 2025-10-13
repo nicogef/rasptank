@@ -1,18 +1,78 @@
+# Global policy: ignore everything by default, then explicitly allow a small set of project areas.
+# This keeps the working tree focused on src, tests, scripts, .github, controller_web, and .junie.
 
-# Python files
+# Ignore everything in the repository root by default
+/*
+
+# Allow this .gitignore itself
+!.gitignore
+
+# Allow curated root files that are part of the project configuration/docs
+!README.md
+!documentation/
+!documentation/**
+!pyproject.toml
+!requirements.txt
+!requirements-dev.txt
+!setup.py
+!setup_HAT_V3.1.py
+!codecov.yml
+!LICENSE
+
+# Allow key project directories and all content within them
+!.github/
+!.github/**
+!bdd/
+!bdd/**
+!src/
+!src/**
+!tests/
+!tests/**
+!scripts/
+!scripts/**
+!controller_web/
+!controller_web/**
+!.junie/
+!.junie/**
+
+# Re-ignore common caches, build artifacts, temporary files (applies to allowed trees)
 **/__pycache__/
-*.pyc
-*.py~
+**/*.py[cod]
+**/*.pyo
+**/*.pyd
+*.so
+*.dylib
+*.dll
 
-# Test and coverage reports
+# Packaging/build artifacts
+**/*.egg-info/
+**/.eggs/
+**/build/
+**/dist/
+
+# Coverage and test outputs
+.coverage
 coverage.xml
 htmlcov/
-.coverage
 junit.xml
 
-# Windows temporary files
-*.swp
+# Virtual environments
+.venv/
+venv/
+.env/
+.env.*
 
-# Others
+# Editors/IDE settings
 .idea/
+.vscode/
 
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node/npm (in case any frontend tooling is used under controller_web)
+**/node_modules/
+**/npm-debug.log*
+
+# Logs
+*.log

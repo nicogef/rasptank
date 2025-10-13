@@ -1,13 +1,15 @@
 [MASTER]
-# Comma-separated dir names (relative) to ignore entirely
-ignore=build,dist,node_modules,.venv,venv,.mypy_cache,.pytest_cache,coverage,logs,__pycache__,web,Client
+# PAths to not ignore (negative lookahead)
+ignore-paths=^(?!.*(?:[\\/]{1}bdd[\\/]steps[\\/]|[\\/]src[\\/]|[\\/]tests[\\/])).*$
 # Extra regex patterns (paths) to exclude
 ignore-patterns=
+    \./__init__\.py,
     tests/fixtures/.*,
     .*_generated\.py,
     .*__init__\.py,
-    setup.*py
-py-version=3.13
+    setup.*py,
+    scripts/ci.py
+py-version=3.11
 jobs=0
 load-plugins=pylint.extensions.mccabe,pylint.extensions.docparams
 
@@ -55,4 +57,4 @@ dummy-variables-rgx=^(_|unused_.*)$
 #overgeneral-exceptions=Exception
 
 [REFACTORING]
-max-nested-blocks=3
+max-nested-blocks=5

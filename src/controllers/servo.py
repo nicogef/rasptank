@@ -7,11 +7,7 @@ ANTICLOCKWISE = -1
 
 
 class ServoCtrlThread(threading.Thread):  # pylint: disable=too-many-instance-attributes
-
-    def __init__(
-        self, name, controller, channel_number, *, position=90, direction=CLOCKWISE
-    ):
-
+    def __init__(self, name, controller, channel_number, *, position=90, direction=CLOCKWISE):
         self.__name = name
         self.__servo = controller.servo(channel_number)
 
@@ -90,8 +86,7 @@ class ServoCtrlThread(threading.Thread):  # pylint: disable=too-many-instance-at
         else:
             self.angle_target_value = int(
                 round(
-                    self.angle_current_value
-                    + self.move_direction * number_of_steps * self.move_step_size,
+                    self.angle_current_value + self.move_direction * number_of_steps * self.move_step_size,
                     0,
                 )
             )
@@ -100,9 +95,7 @@ class ServoCtrlThread(threading.Thread):  # pylint: disable=too-many-instance-at
         self.resume()
 
     def __next_step(self):
-        new_position = self.angle_current_value + (
-            self.move_direction * self.servo_speed * self.move_step_duration
-        )
+        new_position = self.angle_current_value + (self.move_direction * self.servo_speed * self.move_step_duration)
         # print(f'{time.time()} -> start next step for -> {new_position}')
         self.__set_angle(new_position)
         time.sleep(self.move_step_delay)
